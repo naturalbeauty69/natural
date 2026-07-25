@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-cream text-ink font-body antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display text-emerald-900;
+  }
+  ::selection {
+    @apply bg-gold-300/40;
+  }
+  :focus-visible {
+    outline: 2px solid #C9A227;
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply font-mono text-xs tracking-[0.2em] uppercase text-emerald-500;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-emerald-700 px-6 py-3
+           text-sm font-medium text-cream shadow-soft transition-colors hover:bg-emerald-500;
+  }
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gold-500 px-6 py-3
+           text-sm font-medium text-emerald-900 shadow-gold transition-colors hover:bg-gold-300;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-emerald-700/30 px-6 py-3
+           text-sm font-medium text-emerald-700 transition-colors hover:border-emerald-700 hover:bg-emerald-50;
+  }
+  .card {
+    @apply rounded-xl2 border border-emerald-900/5 bg-cream-soft shadow-soft;
+  }
+}
