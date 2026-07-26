@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SectionHeading from "@/components/SectionHeading";
+import Breadcrumbs from "@/components/nav/Breadcrumbs";
 import TestimonialCard from "@/components/TestimonialCard";
 import { getTestimonials } from "@/lib/get-data";
 
@@ -12,6 +13,7 @@ export default async function TestimonialsPage() {
   const testimonials = await getTestimonials();
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
+      <Breadcrumbs items={[{ "label": "Testimonials" }]} />
       <SectionHeading
         eyebrow="Testimonials"
         title="What clients & students say."

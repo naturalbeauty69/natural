@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SectionHeading from "@/components/SectionHeading";
+import Breadcrumbs from "@/components/nav/Breadcrumbs";
 import TeamCard from "@/components/TeamCard";
 import { getTeam } from "@/lib/get-data";
 
@@ -13,6 +14,7 @@ export default async function TeamPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
+      <Breadcrumbs items={[{ "label": "Team" }]} />
       <SectionHeading
         eyebrow="Our Team"
         title="The people behind every treatment."

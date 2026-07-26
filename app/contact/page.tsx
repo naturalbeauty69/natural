@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import SectionHeading from "@/components/SectionHeading";
+import Breadcrumbs from "@/components/nav/Breadcrumbs";
 import { getContactSettings } from "@/lib/get-data";
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default async function ContactPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
+      <Breadcrumbs items={[{ "label": "Contact" }]} />
       <SectionHeading eyebrow="Contact" title="We'd love to see you." align="center" />
 
       <div className="mt-10 grid gap-6 sm:grid-cols-2">

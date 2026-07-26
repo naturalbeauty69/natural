@@ -3,6 +3,7 @@ import { Fraunces, Sora, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import FloatingActions from "@/components/nav/FloatingActions";
 import { getContactSettings } from "@/lib/get-data";
 import { companyProfile } from "@/data/company";
 
@@ -47,9 +48,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`${fraunces.variable} ${sora.variable} ${plexMono.variable}`}>
       <body>
-        <Header />
-        <main>{children}</main>
+        <Header contact={contact} />
+        <main className="pb-20 md:pb-0">{children}</main>
         <Footer contact={contact} />
+        <FloatingActions contact={contact} />
       </body>
     </html>
   );

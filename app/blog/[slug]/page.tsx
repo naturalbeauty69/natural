@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import BrandDivider from "@/components/BrandDivider";
+import Breadcrumbs from "@/components/nav/Breadcrumbs";
 import { blogPosts } from "@/data/blog";
 
 export function generateStaticParams() {
@@ -35,7 +35,7 @@ export default async function BlogPostPage({
 
   return (
     <article className="mx-auto max-w-2xl px-6 py-16">
-      <Link href="/blog" className="eyebrow text-emerald-500 hover:text-emerald-700">← All Articles</Link>
+      <Breadcrumbs items={[{ label: "Blog", href: "/blog" }, { label: post.title }]} />
 
       <p className="eyebrow mt-6 text-gold-500">{post.category}</p>
       <h1 className="mt-2 text-3xl md:text-4xl">{post.title}</h1>

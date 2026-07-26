@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SectionHeading from "@/components/SectionHeading";
+import Breadcrumbs from "@/components/nav/Breadcrumbs";
 import BrandDivider from "@/components/BrandDivider";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ const courseTracks = [
 export default function AcademyPage() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-16">
+      <Breadcrumbs items={[{ "label": "Academy" }]} />
       <SectionHeading
         eyebrow="Natural Beauty Academy"
         title="Certified courses, taught inside a working clinic."

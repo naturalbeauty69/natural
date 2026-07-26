@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SectionHeading from "@/components/SectionHeading";
+import Breadcrumbs from "@/components/nav/Breadcrumbs";
 import BlogCard from "@/components/BlogCard";
 import { blogPosts } from "@/data/blog";
 
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 export default function BlogIndexPage() {
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
+      <Breadcrumbs items={[{ "label": "Blog" }]} />
       <SectionHeading
         eyebrow="Blog"
         title="Beauty & Career Insights"

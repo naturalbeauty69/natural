@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import SectionHeading from "@/components/SectionHeading";
+import Breadcrumbs from "@/components/nav/Breadcrumbs";
 import { getGalleryImages } from "@/lib/get-data";
 import { galleryCategories } from "@/data/gallery";
 
@@ -14,6 +15,7 @@ export default async function GalleryPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
+      <Breadcrumbs items={[{ "label": "Gallery" }]} />
       <SectionHeading
         eyebrow="Gallery"
         title="Inside the clinic and academy."

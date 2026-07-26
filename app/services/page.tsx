@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import SectionHeading from "@/components/SectionHeading";
+import Breadcrumbs from "@/components/nav/Breadcrumbs";
 import BrandDivider from "@/components/BrandDivider";
 import ServiceCard from "@/components/ServiceCard";
 import { getServiceCategories, getServices } from "@/lib/get-data";
@@ -19,6 +20,7 @@ export default async function ServicesPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
+      <Breadcrumbs items={[{ "label": "Services" }]} />
       <SectionHeading
         eyebrow="Services & Pricing"
         title="Our official price list."
