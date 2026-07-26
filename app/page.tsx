@@ -8,6 +8,7 @@ import StatsGrid from "@/components/StatsGrid";
 import TestimonialCard from "@/components/TestimonialCard";
 import { getServices, getTeam, getContactSettings, getTestimonials } from "@/lib/get-data";
 import { homepageContent } from "@/data/homepage";
+import { offers } from "@/data/offers";
 
 export default async function HomePage() {
   const [services, team, contact, testimonials] = await Promise.all([
@@ -49,6 +50,33 @@ export default async function HomePage() {
 
       <BrandDivider />
 
+      {/* SHOWCASE GRID */}
+      <section className="mx-auto max-w-7xl px-6 py-16">
+        <SectionHeading eyebrow="Explore Natural Beauty" title="Beauty care and career training, side by side." align="center" />
+        <div className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-4 md:grid-cols-4">
+          {[
+            { href: "/services#hair-services", img: "/images/library/hero-hair-color-services.webp", label: "Hair Color & Styling" },
+            { href: "/services#makeup", img: "/images/library/hero-bridal-makeup.webp", label: "Bridal Makeup" },
+            { href: "/services#nail-services", img: "/images/library/hero-nail-art.webp", label: "Nail Art" },
+            { href: "/academy", img: "/images/library/hero-academy-showcase.webp", label: "Academy" },
+          ].map((item) => (
+            <Link key={item.label} href={item.href} className="group relative aspect-[3/4] overflow-hidden rounded-xl2 shadow-soft">
+              <Image
+                src={item.img}
+                alt={item.label}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="(min-width: 768px) 25vw, 50vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/80 via-emerald-900/0 to-transparent" />
+              <p className="absolute bottom-3 left-3 font-display text-sm text-cream md:text-base">{item.label}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <BrandDivider />
+
       {/* FEATURED SERVICES */}
       <section className="mx-auto max-w-7xl px-6 py-16">
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -64,6 +92,23 @@ export default async function HomePage() {
             <ServiceCard key={s.slug} service={s} />
           ))}
         </div>
+      </section>
+
+      <BrandDivider />
+
+      {/* CURRENT OFFERS */}
+      <section className="mx-auto max-w-7xl px-6 py-16">
+        <SectionHeading eyebrow="Current Offers" title="Limited-time treatment offers." align="center" />
+        <div className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-4 md:grid-cols-3">
+          {offers.map((offer) => (
+            <div key={offer.image} className="relative aspect-square overflow-hidden rounded-xl2 shadow-soft">
+              <Image src={offer.image} alt={offer.label} fill className="object-cover" sizes="(min-width: 768px) 33vw, 50vw" />
+            </div>
+          ))}
+        </div>
+        <p className="mt-6 text-center text-xs text-ink-soft">
+          Offers subject to change — contact us to confirm current pricing and availability.
+        </p>
       </section>
 
       <BrandDivider />

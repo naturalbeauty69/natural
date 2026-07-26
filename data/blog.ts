@@ -17,6 +17,7 @@ function slugify(title: string) {
 const raw: Omit<BlogPost, "slug">[] = [
   {
     title: "The Ultimate Guide to Healthy, Glowing Skin",
+    coverImageUrl: "/images/library/hero-spa-facial.webp",
     coverImageCaption: "Beautiful woman receiving a professional Hydra Facial treatment in a modern beauty clinic.",
     content:
       "Healthy skin begins with proper skincare, hydration, nutrition, and professional treatments. Daily cleansing, moisturizing, sunscreen, and regular skin analysis help maintain radiant skin. Professional facials such as Hydra Facial and Medi Facial deeply cleanse the skin, improve hydration, reduce pigmentation, and promote a youthful glow. At Natural Beauty Clinic & Academy, every skin treatment is customized according to your skin type and concerns.",
@@ -27,6 +28,7 @@ const raw: Omit<BlogPost, "slug">[] = [
   },
   {
     title: "How to Prevent Hair Fall Naturally and Professionally",
+    coverImageUrl: "/images/library/hair-services.webp",
     coverImageCaption: "Professional hair consultation and scalp analysis.",
     content:
       "Hair fall can result from stress, poor nutrition, hormonal imbalance, or improper hair care. Regular scalp treatments, healthy eating, proper hair washing techniques, and professional consultation can significantly reduce hair loss. Our clinic provides advanced scalp analysis and personalized hair care solutions to promote healthy hair growth.",
@@ -37,6 +39,7 @@ const raw: Omit<BlogPost, "slug">[] = [
   },
   {
     title: "Why Professional Skin Analysis Is Important",
+    coverImageUrl: "/images/library/skin-analysis-machine.webp",
     coverImageCaption: "Advanced digital skin analysis machine.",
     content:
       "Every person's skin is unique. A professional skin analysis identifies concerns such as acne, pigmentation, dehydration, sensitivity, enlarged pores, and aging. Understanding your skin condition allows professionals to recommend the most suitable treatments and skincare products for long-term results.",
@@ -47,6 +50,7 @@ const raw: Omit<BlogPost, "slug">[] = [
   },
   {
     title: "Top Beauty Courses to Build a Successful Career",
+    coverImageUrl: "/images/library/hairdressing-course.webp",
     coverImageCaption: "Students practicing professional beauty techniques.",
     content:
       "The beauty industry offers excellent career opportunities. Professional beautician, makeup artist, nail technician, hairdresser, and skincare specialist courses provide practical skills for employment or starting your own beauty business. Our academy emphasizes hands-on learning and industry-ready training.",
@@ -57,6 +61,7 @@ const raw: Omit<BlogPost, "slug">[] = [
   },
   {
     title: "Hydra Facial: Benefits for Every Skin Type",
+    coverImageUrl: "/images/library/Skin-and-facial-treatment.webp",
     coverImageCaption: "Hydra Facial treatment session.",
     content:
       "Hydra Facial deeply cleanses, exfoliates, hydrates, and nourishes the skin without discomfort. It improves skin texture, reduces fine lines, minimizes pores, and restores a healthy glow. Suitable for most skin types, Hydra Facial is a popular choice for maintaining healthy skin year-round.",
@@ -67,6 +72,7 @@ const raw: Omit<BlogPost, "slug">[] = [
   },
   {
     title: "Bridal Makeup Tips for a Perfect Wedding Look",
+    coverImageUrl: "/images/library/nepali-bridal-makeup.webp",
     coverImageCaption: "Professional bridal makeup transformation.",
     content:
       "A flawless bridal look begins with proper skincare, trial makeup sessions, and selecting a style that complements your features and attire. Professional bridal makeup enhances natural beauty while ensuring long-lasting results throughout the wedding celebrations.",
@@ -77,6 +83,7 @@ const raw: Omit<BlogPost, "slug">[] = [
   },
   {
     title: "The Importance of Sunscreen in Every Season",
+    coverImageUrl: "/images/library/skin-treatments.webp",
     coverImageCaption: "Woman applying sunscreen outdoors.",
     content:
       "Daily sunscreen use protects the skin from harmful UV rays, premature aging, pigmentation, and sun damage. Applying a broad-spectrum sunscreen every morning and reapplying as needed helps maintain healthy, youthful-looking skin regardless of the season.",
@@ -87,6 +94,7 @@ const raw: Omit<BlogPost, "slug">[] = [
   },
   {
     title: "Keratin Treatment vs Hair Smoothening: Which Is Better?",
+    coverImageUrl: "/images/library/hair-smoothening-rebonding.webp",
     coverImageCaption: "Before-and-after professional hair treatment.",
     content:
       "Keratin treatment nourishes hair while reducing frizz and enhancing shine. Hair smoothening focuses on creating straighter, more manageable hair. The right choice depends on your hair type, condition, and desired results. Professional consultation ensures the most suitable treatment.",
@@ -97,6 +105,7 @@ const raw: Omit<BlogPost, "slug">[] = [
   },
   {
     title: "Essential Skincare Routine for Every Skin Type",
+    coverImageUrl: "/images/library/ai-skin-analysis.webp",
     coverImageCaption: "Professional skincare products arranged neatly.",
     content:
       "An effective skincare routine includes cleansing, toning, moisturizing, sunscreen, and periodic exfoliation. Choosing products according to your skin type helps prevent acne, dryness, sensitivity, and premature aging while maintaining healthy skin.",
@@ -107,6 +116,7 @@ const raw: Omit<BlogPost, "slug">[] = [
   },
   {
     title: "How Professional Beauty Training Can Change Your Career",
+    coverImageUrl: "/images/library/professional-makeup-course.webp",
     coverImageCaption: "Beauty academy students during practical training.",
     content:
       "Professional beauty education provides practical experience, technical expertise, and confidence needed for success in the beauty industry. Graduates can work in salons, beauty clinics, spas, wellness centers, or establish their own businesses. Continuous learning and practical training are key to long-term success.",

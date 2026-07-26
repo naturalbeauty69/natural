@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import BrandDivider from "@/components/BrandDivider";
 import { blogPosts } from "@/data/blog";
@@ -43,8 +44,14 @@ export default async function BlogPostPage({
         {" · "}{post.author}
       </p>
 
-      <div className="mt-8 flex aspect-[16/9] items-center justify-center rounded-xl2 bg-emerald-50 px-8 text-center">
-        <p className="text-sm italic text-emerald-700/70">{post.coverImageCaption}</p>
+      <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-xl2 bg-emerald-50">
+        {post.coverImageUrl ? (
+          <Image src={post.coverImageUrl} alt={post.title} fill className="object-cover" sizes="672px" />
+        ) : (
+          <div className="flex h-full items-center justify-center px-8 text-center">
+            <p className="text-sm italic text-emerald-700/70">{post.coverImageCaption}</p>
+          </div>
+        )}
       </div>
 
       <BrandDivider className="mt-10" />

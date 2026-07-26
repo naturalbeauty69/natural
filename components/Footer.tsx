@@ -67,7 +67,10 @@ export default function Footer({ contact }: { contact: ContactSettings }) {
         </div>
 
         <div>
-          <p className="eyebrow text-gold-300">Legal</p>
+          <p className="eyebrow flex items-center gap-1.5 text-gold-300">
+            <img src="/images/logo/icon-legal.png" alt="" className="h-3.5 w-3.5" />
+            Legal
+          </p>
           <ul className="mt-3 space-y-1 text-sm">
             <li><Link href="/privacy" className="hover:text-gold-300">Privacy Policy</Link></li>
             <li><Link href="/terms" className="hover:text-gold-300">Terms &amp; Conditions</Link></li>

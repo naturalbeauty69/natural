@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const nav = [
   { href: "/about", label: "About" },
@@ -14,10 +15,13 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-emerald-900/5 bg-cream/90 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link href="/" className="font-display text-xl font-semibold text-emerald-900">
-          Natural Beauty
-          <span className="ml-1 align-super text-[0.55em] tracking-widest text-gold-500">
-            CLINIC &amp; ACADEMY
+        <Link href="/" className="flex items-center gap-2.5">
+          <Image src="/images/logo/logo.png" alt="Natural Beauty Clinic & Academy" width={40} height={40} className="h-10 w-10" />
+          <span className="font-display text-xl font-semibold text-emerald-900">
+            Natural Beauty
+            <span className="ml-1 align-super text-[0.55em] tracking-widest text-gold-500">
+              CLINIC &amp; ACADEMY
+            </span>
           </span>
         </Link>
 
