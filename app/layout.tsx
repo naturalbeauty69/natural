@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingActions from "@/components/nav/FloatingActions";
+import SplashScreen from "@/components/SplashScreen";
 import { getContactSettings } from "@/lib/get-data";
 import { companyProfile } from "@/data/company";
 
@@ -48,6 +49,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`${fraunces.variable} ${sora.variable} ${plexMono.variable}`}>
       <body>
+        <SplashScreen />
         <Header contact={contact} />
         <main className="pb-20 md:pb-0">{children}</main>
         <Footer contact={contact} />

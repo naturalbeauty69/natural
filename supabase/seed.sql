@@ -118,6 +118,21 @@ select c.id, s.slug, s.name, s.price_min, s.price_max, s.starting, s.ord from (v
 join service_categories c on c.slug = 'nail-services'
 on conflict (slug) do nothing;
 
+-- ---------- ACADEMY COURSES ----------
+insert into courses (slug, name, category, level, duration, price, display_order) values
+  ('basic-beautician-course', 'Basic Beautician Course', 'Beauty & Skin Care', 'Beginner', '1–3 Months', 35000, 1),
+  ('advanced-beautician-course', 'Advanced Beautician Course', 'Beauty & Skin Care', 'Intermediate', '3–6 Months', 65000, 2),
+  ('professional-makeup-artist-course', 'Professional Makeup Artist Course', 'Makeup', 'Beginner / Advanced', '1–3 Months', 45000, 3),
+  ('bridal-makeup-specialist-course', 'Bridal Makeup Specialist Course', 'Makeup', 'Advanced', 'Short Term', 25000, 4),
+  ('hair-dressing-course', 'Hair Dressing Course', 'Hair Care', 'Beginner / Professional', '3–6 Months', 55000, 5),
+  ('hair-science-course', 'Hair Science Course', 'Hair & Trichology', 'Advanced', 'Short Term', 30000, 6),
+  ('skin-care-specialist-course', 'Skin Care Specialist Course', 'Skin Treatment', 'Professional', '3–6 Months', 60000, 7),
+  ('facial-aesthetic-treatment-course', 'Facial & Aesthetic Treatment Course', 'Advanced Skin Care', 'Advanced', 'Short Term', 35000, 8),
+  ('nail-technician-course', 'Nail Technician Course', 'Nail Technology', 'Beginner', '1–3 Months', 40000, 9),
+  ('nail-art-specialist-course', 'Nail Art Specialist Course', 'Nail Technology', 'Advanced', 'Short Term', 25000, 10),
+  ('salon-management-course', 'Salon Management Course', 'Business Management', 'Professional', 'Short Term', 30000, 11)
+on conflict (slug) do nothing;
+
 -- ---------- TESTIMONIALS ----------
 insert into testimonials (customer_name, location, rating, content) values
   ('Priya Shrestha', 'Kathmandu', 5, 'I had an amazing experience at Natural Beauty Clinic & Academy. The skin analysis and facial treatment were professional, and my skin feels healthier than ever. The staff were friendly and knowledgeable.'),

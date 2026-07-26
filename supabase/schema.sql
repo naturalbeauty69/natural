@@ -91,6 +91,8 @@ create table if not exists courses (
   id uuid primary key default uuid_generate_v4(),
   slug text unique not null,
   name text not null,
+  category text, -- e.g. 'Beauty & Skin Care', 'Makeup', 'Hair Care', 'Nail Technology'
+  level text, -- e.g. 'Beginner', 'Intermediate', 'Advanced', 'Professional'
   summary text,
   description text,
   duration text,
@@ -102,6 +104,32 @@ create table if not exists courses (
   image_url text,
   is_active boolean not null default true,
   display_order int not null default 0
+);
+
+-- ------------------------------------------------------------
+-- COURSE BATCHES (Admin scheduling — no public UI yet; this table
+-- is the data model for the future Admin Dashboard "Batch Management"
+-- screen. Not exposed via any public RLS read policy.)
+-- ------------------------------------------------------------
+create table if not exists course_batches (
+  id uuid primary key default uuid_generate_v4(),
+  batch_name text not null, -- e.g. "Beautician Batch 2026-A"
+  course_id uuid not null references courses(id) on delete restrict,
+  course_fee numeric(10,2) not null, -- auto-filled from courses.price, editable
+  registration_fee numeric(10,2) default 0,
+  discount numeric(10,2) default 0,
+  -- remaining_balance is computed in application code as:
+  -- course_fee - discount  (registration_fee tracked separately as a deposit)
+  start_date date,
+  end_date date,
+  class_schedule text, -- 'Morning' | 'Day' | 'Evening'
+  trainer text,
+  total_students int not null default 0,
+  max_capacity int not null default 20,
+  classroom text,
+  status text not null default 'upcoming' check (status in ('upcoming','running','completed')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 -- ------------------------------------------------------------
@@ -200,6 +228,7 @@ alter table testimonials enable row level security;
 alter table site_settings enable row level security;
 alter table blog_posts enable row level security;
 alter table faqs enable row level security;
+alter table course_batches enable row level security; -- no public policy: admin/service-role access only
 
 create policy "public read active team" on team_members for select using (is_active = true);
 create policy "public read active categories" on service_categories for select using (is_active = true);

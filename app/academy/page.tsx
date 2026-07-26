@@ -1,24 +1,27 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import SectionHeading from "@/components/SectionHeading";
 import Breadcrumbs from "@/components/nav/Breadcrumbs";
 import BrandDivider from "@/components/BrandDivider";
+import CourseCard from "@/components/CourseCard";
+import { courses, courseCategories } from "@/data/courses";
 
 export const metadata: Metadata = {
   title: "Beauty Academy",
-  description: "Professional beauty, hair science, makeup, and nail art courses with certification.",
+  description: "Professional beauty, hair science, makeup, skin, and nail art courses with certification — full course list and fees.",
 };
 
-const courseTracks = [
-  { name: "Beauty Training", note: "Skincare, facials, waxing, threading" },
-  { name: "Hair Science", note: "Cutting, coloring, treatments, styling" },
-  { name: "Makeup Artistry", note: "Bridal, party, and day makeup" },
-  { name: "Nail Art", note: "Manicure, pedicure, extensions, nail art" },
+const trainingPhotos = [
+  "/images/library/Academy4.webp",
+  "/images/library/Academy7.webp",
+  "/images/library/Academy9.webp",
+  "/images/library/Academy10.webp",
 ];
 
 export default function AcademyPage() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-16">
-      <Breadcrumbs items={[{ "label": "Academy" }]} />
+      <Breadcrumbs items={[{ label: "Academy" }]} />
       <SectionHeading
         eyebrow="Natural Beauty Academy"
         title="Certified courses, taught inside a working clinic."
@@ -28,22 +31,42 @@ export default function AcademyPage() {
 
       <BrandDivider />
 
-      <div className="mt-10 grid gap-6 sm:grid-cols-2">
-        {courseTracks.map((c) => (
-          <div key={c.name} className="card p-6">
-            <p className="font-display text-xl text-emerald-900">{c.name}</p>
-            <p className="mt-2 text-sm text-ink-soft">{c.note}</p>
+      {/* TRAINING PHOTOS */}
+      <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
+        {trainingPhotos.map((src) => (
+          <div key={src} className="relative aspect-square overflow-hidden rounded-xl2 shadow-soft">
+            <Image src={src} alt="Academy training session" fill className="object-cover" sizes="(min-width: 768px) 25vw, 50vw" />
           </div>
         ))}
       </div>
 
-      <div className="mt-10 rounded-xl2 border border-dashed border-gold-500/40 bg-gold-100/30 p-6">
-        <p className="eyebrow text-gold-700">Content Needed From Client</p>
+      <BrandDivider className="mt-14" />
+
+      {/* COURSE CATALOG */}
+      <div className="mt-4 space-y-12">
+        {courseCategories.map((category) => {
+          const categoryCourses = courses.filter((c) => c.category === category);
+          return (
+            <section key={category}>
+              <div className="flex items-center gap-4">
+                <h2 className="text-xl md:text-2xl">{category}</h2>
+                <span className="h-px flex-1 bg-emerald-900/10" />
+              </div>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {categoryCourses.map((course) => (
+                  <CourseCard key={course.slug} course={course} />
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      <div className="mt-14 rounded-xl2 border border-dashed border-gold-500/40 bg-gold-100/30 p-6 text-center">
+        <p className="eyebrow text-gold-700">Fees are suggested starting prices</p>
         <p className="mt-2 text-sm text-ink-soft">
-          The <code>courses</code> table (see supabase/schema.sql) is ready to hold real
-          curriculum, duration, eligibility, fees, and certification names for each track
-          above. Share the course details/portfolio and Phase 2 will wire this page to
-          live data exactly like the Services page.
+          Final fees, batch dates, and schedules are confirmed at enrollment — contact us
+          or visit for the current batch calendar and any active discounts.
         </p>
       </div>
     </div>
