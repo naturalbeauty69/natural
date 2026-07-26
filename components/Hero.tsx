@@ -3,8 +3,25 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { HeroCta } from "@/lib/types";
 
-export default function Hero({ tagline }: { tagline: string }) {
+const ctaClass: Record<HeroCta["style"], string> = {
+  gold: "btn-gold",
+  outline: "btn-outline",
+  primary: "btn-primary",
+};
+
+export default function Hero({
+  tagline,
+  heading,
+  description,
+  ctas,
+}: {
+  tagline: string;
+  heading: string;
+  description: string;
+  ctas: HeroCta[];
+}) {
   return (
     <section className="relative overflow-hidden bg-cream">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-16 md:grid-cols-2 md:py-24">
@@ -14,19 +31,16 @@ export default function Hero({ tagline }: { tagline: string }) {
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
           <p className="eyebrow">{tagline}</p>
-          <h1 className="mt-4 text-4xl leading-[1.1] md:text-6xl">
-            Where science meets
-            <span className="italic text-gold-500"> natural </span>
-            beauty.
-          </h1>
+          <h1 className="mt-4 text-4xl leading-[1.1] md:text-5xl">{heading}</h1>
           <p className="mt-6 max-w-md text-base leading-relaxed text-ink-soft">
-            Kathmandu&apos;s trusted clinic and academy for advanced skin analysis,
-            precision hair care, and industry-certified beauty education —
-            led by senior beautician and assessor Archana Silwal Kadel.
+            {description}
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
-            <Link href="/appointment" className="btn-gold">Book an Appointment</Link>
-            <Link href="/academy" className="btn-outline">Explore the Academy</Link>
+            {ctas.map((cta) => (
+              <Link key={cta.label} href={cta.href} className={ctaClass[cta.style]}>
+                {cta.label}
+              </Link>
+            ))}
           </div>
         </motion.div>
 

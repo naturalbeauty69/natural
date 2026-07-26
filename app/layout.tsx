@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getContactSettings } from "@/lib/get-data";
+import { companyProfile } from "@/data/company";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -30,11 +31,11 @@ export const metadata: Metadata = {
     default: "Natural Beauty Clinic & Academy | Kathmandu",
     template: "%s | Natural Beauty Clinic & Academy",
   },
-  description:
-    "Professional Beauty, Skin & Hair Care | Training & Certification — New Baneshwor, Kathmandu.",
+  description: companyProfile.shortDescription,
+  keywords: companyProfile.seoKeywords,
   openGraph: {
     title: "Natural Beauty Clinic & Academy",
-    description: "Professional Beauty, Skin & Hair Care | Training & Certification",
+    description: companyProfile.shortDescription,
     locale: "en_US",
     type: "website",
   },

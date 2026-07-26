@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SectionHeading from "@/components/SectionHeading";
+import { FacebookIcon, InstagramIcon, TikTokIcon } from "@/components/SocialIcons";
 import { getContactSettings } from "@/lib/get-data";
 
 export const metadata: Metadata = {
@@ -34,22 +35,42 @@ export default async function ContactPage() {
           </p>
         </div>
         <div className="card p-6">
-          <p className="eyebrow text-gold-500">WhatsApp &amp; TikTok</p>
+          <p className="eyebrow text-gold-500">WhatsApp &amp; Social</p>
           <p className="mt-2 text-sm">
-            <a
-              href={`https://wa.me/${contact.whatsapp.replace(/\D/g, "")}`}
-              className="hover:text-emerald-700"
-            >
+            <a href={`https://wa.me/${contact.whatsapp.replace(/\D/g, "")}`} className="hover:text-emerald-700">
               {contact.whatsapp}
             </a>
           </p>
-          <p className="mt-1 text-sm text-ink-soft">{contact.tiktok}</p>
+          <div className="mt-3 flex items-center gap-4 text-emerald-700">
+            <a href={contact.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-gold-500">
+              <FacebookIcon className="h-5 w-5" />
+            </a>
+            <a href={contact.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="hover:text-gold-500">
+              <InstagramIcon className="h-5 w-5" />
+            </a>
+            <a href={contact.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok" className="hover:text-gold-500">
+              <TikTokIcon className="h-5 w-5" />
+            </a>
+          </div>
         </div>
       </div>
 
-      <div className="mt-10 rounded-xl2 border border-dashed border-gold-500/40 bg-gold-100/30 p-6 text-sm text-ink-soft">
-        Embedded Google Map goes here once the exact place listing / Google Business
-        Profile link is confirmed.
+      <div className="mt-10 overflow-hidden rounded-xl2 border border-emerald-900/10">
+        {contact.mapEmbedUrl ? (
+          <iframe
+            src={contact.mapEmbedUrl}
+            width="100%"
+            height="360"
+            style={{ border: 0 }}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            title="Natural Beauty Clinic & Academy location"
+          />
+        ) : (
+          <div className="bg-gold-100/30 p-6 text-center text-sm text-ink-soft">
+            Google Maps embed goes here — send the Maps link and it drops straight in.
+          </div>
+        )}
       </div>
     </div>
   );

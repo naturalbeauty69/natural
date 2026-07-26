@@ -1,0 +1,27 @@
+import type { Metadata } from "next";
+import SectionHeading from "@/components/SectionHeading";
+import BlogCard from "@/components/BlogCard";
+import { blogPosts } from "@/data/blog";
+
+export const metadata: Metadata = {
+  title: "Blog",
+  description: "Skin care, hair care, makeup, and beauty education articles from Natural Beauty Clinic & Academy.",
+};
+
+export default function BlogIndexPage() {
+  return (
+    <div className="mx-auto max-w-7xl px-6 py-16">
+      <SectionHeading
+        eyebrow="Blog"
+        title="Beauty & Career Insights"
+        description="Skin care, hair care, makeup tips, and career guidance from our team."
+        align="center"
+      />
+      <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {blogPosts.map((post) => (
+          <BlogCard key={post.slug} post={post} />
+        ))}
+      </div>
+    </div>
+  );
+}

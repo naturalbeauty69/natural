@@ -4,48 +4,47 @@ import Hero from "@/components/Hero";
 import SectionHeading from "@/components/SectionHeading";
 import BrandDivider from "@/components/BrandDivider";
 import ServiceCard from "@/components/ServiceCard";
-import TeamCard from "@/components/TeamCard";
-import { getServices, getTeam, getContactSettings } from "@/lib/get-data";
+import StatsGrid from "@/components/StatsGrid";
+import TestimonialCard from "@/components/TestimonialCard";
+import { getServices, getTeam, getContactSettings, getTestimonials } from "@/lib/get-data";
+import { homepageContent } from "@/data/homepage";
 
 export default async function HomePage() {
-  const [services, team, contact] = await Promise.all([
+  const [services, team, contact, testimonials] = await Promise.all([
     getServices(),
     getTeam(),
     getContactSettings(),
+    getTestimonials(),
   ]);
 
   const featured = services.filter((s) => s.is_featured).slice(0, 3);
-  const highlightServices = featured.length
-    ? featured
-    : services.slice(0, 3);
-
+  const highlightServices = featured.length ? featured : services.slice(0, 3);
   const director = team.find((m) => m.slug === "archana-silwal-kadel");
 
   return (
     <>
-      <Hero tagline="Professional Beauty, Skin & Hair Care | Training & Certification" />
+      <Hero
+        tagline="Professional Beauty, Skin & Hair Care | Training & Certification"
+        heading={homepageContent.heroHeading}
+        description={homepageContent.heroDescription}
+        ctas={homepageContent.heroCtas}
+      />
 
       <BrandDivider />
 
-      {/* WHY CHOOSE US */}
-      <section className="mx-auto max-w-7xl px-6 py-16">
-        <SectionHeading
-          eyebrow="Why Natural Beauty"
-          title="A clinic run on training, not guesswork."
-          description="Every treatment is performed or supervised by a certified assessor, using globally recognized product lines — LOTUS, CASMARA, and O3+ — inside a purpose-built, hygienic clinic in New Baneshwor."
-        />
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {[
-            { title: "Certified & Assessed", body: "Led by a senior beautician who is also a licensed trainer and assessor — not just a service provider." },
-            { title: "Science-Backed Skincare", body: "Skin analysis and treatments built on internationally recognized brand protocols." },
-            { title: "Train Where You're Treated", body: "The same clinic floor trains the next generation of beauticians — theory tested against real client results." },
-          ].map((item) => (
-            <div key={item.title} className="card p-6">
-              <p className="font-display text-lg text-emerald-900">{item.title}</p>
-              <p className="mt-2 text-sm leading-relaxed text-ink-soft">{item.body}</p>
-            </div>
+      {/* ABOUT SECTION */}
+      <section className="mx-auto max-w-4xl px-6 py-16 text-center">
+        <h2 className="text-3xl md:text-4xl">{homepageContent.aboutHeading}</h2>
+        <div className="mx-auto mt-6 max-w-2xl space-y-4 text-base leading-relaxed text-ink-soft">
+          {homepageContent.aboutContent.map((para) => (
+            <p key={para}>{para}</p>
           ))}
         </div>
+      </section>
+
+      {/* STATISTICS */}
+      <section className="mx-auto max-w-7xl px-6 pb-16">
+        <StatsGrid stats={homepageContent.statistics} />
       </section>
 
       <BrandDivider />
@@ -89,8 +88,8 @@ export default async function HomePage() {
               <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-soft">
                 {director.bio}
               </p>
-              <Link href="/team" className="btn-primary mt-6 inline-flex">
-                Meet the Full Team
+              <Link href="/about" className="btn-primary mt-6 inline-flex">
+                Read the Director's Message
               </Link>
             </div>
           </div>
@@ -117,9 +116,25 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <BrandDivider />
+
+      {/* TESTIMONIALS */}
+      <section className="mx-auto max-w-7xl px-6 py-16">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <SectionHeading eyebrow="Testimonials" title="What clients & students say." />
+          <Link href="/testimonials" className="btn-outline">Read All Reviews</Link>
+        </div>
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {testimonials.slice(0, 3).map((t) => (
+            <TestimonialCard key={t.name} testimonial={t} />
+          ))}
+        </div>
+      </section>
+
       {/* CONTACT STRIP */}
       <section className="mx-auto max-w-7xl px-6 py-16">
         <SectionHeading eyebrow="Visit or Reach Us" title="New Baneshwor, Kathmandu" align="center" />
+        <p className="mt-3 text-center text-sm text-ink-soft">{contact.businessHours}</p>
         <div className="mx-auto mt-6 flex max-w-xl flex-wrap justify-center gap-4 text-sm">
           {contact.phones.map((p) => (
             <a key={p} href={`tel:${p}`} className="btn-outline">{p}</a>

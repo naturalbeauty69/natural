@@ -57,5 +57,55 @@ export interface ContactSettings {
   email: string;
   address: string;
   tiktok: string;
+  facebook: string;
+  instagram: string;
   esewa: string;
+  mapEmbedUrl?: string | null;
+  businessHours: string;
+}
+
+export interface CompanyProfile {
+  registrationNumber: string;
+  panVatNumber: string;
+  established: string;
+  shortDescription: string;
+  longDescription: string;
+  mission: string;
+  vision: string;
+  coreValues: string[];
+  whyChooseUs: string[];
+  seoKeywords: string[];
+}
+
+export interface HeroCta {
+  label: string;
+  href: string;
+  style: "gold" | "outline" | "primary";
+}
+
+export interface HomepageContent {
+  heroHeading: string;
+  heroDescription: string;
+  heroCtas: HeroCta[];
+  aboutHeading: string;
+  aboutContent: string[];
+  statistics: { label: string; value: string }[];
+}
+
+export interface OwnerStory {
+  name: string;
+  title: string;
+  content: string[];
+}
+
+export interface DirectorMessage {
+  content: string[];
+  signOffName: string;
+  signOffTitle: string;
+}
+
+export interface TimelineEntry {
+  year: string;
+  title: string;
+  points: string[];
 }

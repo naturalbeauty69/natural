@@ -134,11 +134,41 @@ create table if not exists gallery_images (
 );
 
 -- ------------------------------------------------------------
+-- BLOG
+-- ------------------------------------------------------------
+create table if not exists blog_posts (
+  id uuid primary key default uuid_generate_v4(),
+  slug text unique not null,
+  title text not null,
+  cover_image_caption text, -- used until a real cover_image_url is uploaded
+  cover_image_url text,
+  content text not null,
+  category text,
+  author text default 'Archana Silwal Kadel',
+  seo_keywords text[] default '{}',
+  published_at date not null default current_date,
+  is_active boolean not null default true,
+  display_order int not null default 0
+);
+
+-- ------------------------------------------------------------
+-- FAQ (site-wide, distinct from per-service FAQs above)
+-- ------------------------------------------------------------
+create table if not exists faqs (
+  id uuid primary key default uuid_generate_v4(),
+  question text not null,
+  answer text not null,
+  display_order int not null default 0,
+  is_active boolean not null default true
+);
+
+-- ------------------------------------------------------------
 -- TESTIMONIALS
 -- ------------------------------------------------------------
 create table if not exists testimonials (
   id uuid primary key default uuid_generate_v4(),
   customer_name text not null,
+  location text,
   rating int not null check (rating between 1 and 5),
   content text not null,
   source text default 'website' check (source in ('website','google','tiktok')),
@@ -168,6 +198,8 @@ alter table courses enable row level security;
 alter table gallery_images enable row level security;
 alter table testimonials enable row level security;
 alter table site_settings enable row level security;
+alter table blog_posts enable row level security;
+alter table faqs enable row level security;
 
 create policy "public read active team" on team_members for select using (is_active = true);
 create policy "public read active categories" on service_categories for select using (is_active = true);
@@ -177,6 +209,8 @@ create policy "public read active courses" on courses for select using (is_activ
 create policy "public read active gallery" on gallery_images for select using (is_active = true);
 create policy "public read featured testimonials" on testimonials for select using (true);
 create policy "public read settings" on site_settings for select using (true);
+create policy "public read active blog posts" on blog_posts for select using (is_active = true);
+create policy "public read active site faqs" on faqs for select using (is_active = true);
 
 -- appointments: insert-only from public (booking form), no public read
 alter table appointments enable row level security;
