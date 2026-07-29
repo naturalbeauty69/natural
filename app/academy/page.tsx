@@ -4,7 +4,8 @@ import SectionHeading from "@/components/SectionHeading";
 import Breadcrumbs from "@/components/nav/Breadcrumbs";
 import BrandDivider from "@/components/BrandDivider";
 import CourseCard from "@/components/CourseCard";
-import { courses, courseCategories } from "@/data/courses";
+import CourseSchema from "@/components/schema/CourseSchema";
+import { getCourses } from "@/lib/get-data";
 
 export const metadata: Metadata = {
   title: "Beauty Academy",
@@ -18,9 +19,13 @@ const trainingPhotos = [
   "/images/library/Academy10.webp",
 ];
 
-export default function AcademyPage() {
+export default async function AcademyPage() {
+  const courses = await getCourses();
+  const courseCategories = Array.from(new Set(courses.map((c) => c.category)));
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-16">
+      <CourseSchema courses={courses} />
       <Breadcrumbs items={[{ label: "Academy" }]} />
       <SectionHeading
         eyebrow="Natural Beauty Academy"
@@ -31,7 +36,6 @@ export default function AcademyPage() {
 
       <BrandDivider />
 
-      {/* TRAINING PHOTOS */}
       <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
         {trainingPhotos.map((src) => (
           <div key={src} className="relative aspect-square overflow-hidden rounded-xl2 shadow-soft">
@@ -42,7 +46,6 @@ export default function AcademyPage() {
 
       <BrandDivider className="mt-14" />
 
-      {/* COURSE CATALOG */}
       <div className="mt-4 space-y-12">
         {courseCategories.map((category) => {
           const categoryCourses = courses.filter((c) => c.category === category);

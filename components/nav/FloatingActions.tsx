@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Phone, Calendar } from "lucide-react";
 import { ContactSettings } from "@/lib/types";
+import { trackWhatsAppClick, trackPhoneClick } from "@/lib/analytics";
 
 export default function FloatingActions({ contact }: { contact: ContactSettings }) {
   const whatsappHref = `https://wa.me/${contact.whatsapp.replace(/\D/g, "")}`;
@@ -19,6 +20,7 @@ export default function FloatingActions({ contact }: { contact: ContactSettings 
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Chat on WhatsApp"
+          onClick={trackWhatsAppClick}
           className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-soft"
           whileHover={{ scale: 1.06 }}
           whileTap={{ scale: 0.94 }}
@@ -35,6 +37,7 @@ export default function FloatingActions({ contact }: { contact: ContactSettings 
         <motion.a
           href={`tel:${contact.phones[0]}`}
           aria-label="Call now"
+          onClick={trackPhoneClick}
           className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-emerald-700 shadow-soft"
           whileHover={{ scale: 1.06 }}
           whileTap={{ scale: 0.94 }}

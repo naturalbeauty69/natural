@@ -18,6 +18,7 @@ create table if not exists team_members (
   role text not null,
   bio text not null,
   photo_url text not null,
+  gallery text[] default '{}',
   specialization text,
   experience_years int,
   display_order int not null default 0,
@@ -42,6 +43,9 @@ create table if not exists service_brands (
   id uuid primary key default uuid_generate_v4(),
   name text unique not null
 );
+
+alter table service_brands enable row level security;
+create policy "public read service_brands" on service_brands for select using (true);
 
 create table if not exists services (
   id uuid primary key default uuid_generate_v4(),
@@ -83,6 +87,9 @@ create table if not exists service_related (
   related_service_id uuid not null references services(id) on delete cascade,
   primary key (service_id, related_service_id)
 );
+
+alter table service_related enable row level security;
+create policy "public read service_related" on service_related for select using (true);
 
 -- ------------------------------------------------------------
 -- ACADEMY / COURSES
@@ -244,3 +251,279 @@ create policy "public read active site faqs" on faqs for select using (is_active
 -- appointments: insert-only from public (booking form), no public read
 alter table appointments enable row level security;
 create policy "public can book" on appointments for insert with check (true);
+
+-- ================================================================
+-- ADMIN SYSTEM — Phase 1
+-- Auth, roles, and the operational tables the admin dashboard uses.
+-- ================================================================
+
+-- ------------------------------------------------------------
+-- PROFILES / ROLES
+-- One row per Supabase Auth user. Created automatically via trigger
+-- below on signup, defaulting to 'guest'. Promote real staff to
+-- their role directly in the Supabase table editor (no self-serve
+-- role escalation from the app).
+-- ------------------------------------------------------------
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  full_name text,
+  email text,
+  phone text,
+  avatar_url text,
+  role text not null default 'guest' check (role in
+    ('owner','director','manager','receptionist','trainer','staff','student','guest')),
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Auto-create a profile row whenever a new Supabase Auth user signs up.
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, email, full_name, role)
+  values (new.id, new.email, new.raw_user_meta_data->>'full_name', 'guest');
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+-- Helper: is the current authenticated user staff-or-above (i.e. has
+-- an admin-dashboard role, not 'student' or 'guest')? Used throughout
+-- the RLS policies below instead of repeating the same subquery.
+create or replace function public.is_staff_or_above()
+returns boolean as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+    and role in ('owner','director','manager','receptionist','trainer','staff')
+    and is_active = true
+  );
+$$ language sql security definer stable;
+
+create or replace function public.is_owner_or_director()
+returns boolean as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+    and role in ('owner','director')
+    and is_active = true
+  );
+$$ language sql security definer stable;
+
+alter table profiles enable row level security;
+create policy "users read own profile" on profiles for select using (auth.uid() = id);
+create policy "staff read all profiles" on profiles for select using (is_staff_or_above());
+create policy "users update own profile" on profiles for update using (auth.uid() = id);
+create policy "owner/director manage profiles" on profiles for all using (is_owner_or_director());
+
+-- ------------------------------------------------------------
+-- STAFF (attendance, leave, salary — separate from auth profile)
+-- ------------------------------------------------------------
+create table if not exists staff_records (
+  id uuid primary key default uuid_generate_v4(),
+  profile_id uuid references profiles(id) on delete set null,
+  position text,
+  salary numeric(10,2),
+  joined_date date,
+  is_active boolean not null default true
+);
+
+create table if not exists staff_attendance (
+  id uuid primary key default uuid_generate_v4(),
+  staff_id uuid not null references staff_records(id) on delete cascade,
+  date date not null,
+  status text not null check (status in ('present','absent','half_day','leave')),
+  notes text,
+  unique (staff_id, date)
+);
+
+-- ------------------------------------------------------------
+-- PRODUCTS / INVENTORY
+-- ------------------------------------------------------------
+create table if not exists products (
+  id uuid primary key default uuid_generate_v4(),
+  name text not null,
+  category text,
+  brand text,
+  price numeric(10,2) not null default 0,
+  description text,
+  image_url text,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+-- NOTE: Inventory management (stock, purchasing, suppliers, barcodes,
+-- expiry tracking) and a Payments/transactions ledger were explicitly
+-- scoped OUT per the business requirement update — this clinic runs
+-- those processes manually outside this system. `products` above is
+-- a showcase catalog only.
+
+-- ------------------------------------------------------------
+-- CERTIFICATES (issued to students on course completion)
+-- ------------------------------------------------------------
+create table if not exists certificates (
+  id uuid primary key default uuid_generate_v4(),
+  student_profile_id uuid references profiles(id) on delete set null,
+  course_id uuid references courses(id) on delete set null,
+  certificate_number text unique not null,
+  issued_date date not null default current_date,
+  file_url text
+);
+
+-- ------------------------------------------------------------
+-- MESSAGES (internal admin inbox — e.g. contact-page inquiries)
+-- ------------------------------------------------------------
+create table if not exists messages (
+  id uuid primary key default uuid_generate_v4(),
+  sender_name text,
+  sender_email text,
+  sender_phone text,
+  subject text,
+  body text,
+  is_read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+-- ------------------------------------------------------------
+-- NOTIFICATIONS (admin notification center)
+-- ------------------------------------------------------------
+create table if not exists notifications (
+  id uuid primary key default uuid_generate_v4(),
+  type text not null check (type in ('appointment','enrollment','review','system')),
+  title text not null,
+  body text,
+  is_read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+-- ------------------------------------------------------------
+-- AUDIT LOGS
+-- ------------------------------------------------------------
+create table if not exists audit_logs (
+  id uuid primary key default uuid_generate_v4(),
+  actor_profile_id uuid references profiles(id) on delete set null,
+  action text not null,
+  table_name text,
+  record_id text,
+  details jsonb,
+  created_at timestamptz not null default now()
+);
+
+-- ------------------------------------------------------------
+-- RLS — admin (staff-or-above) full access; no public policies.
+-- ------------------------------------------------------------
+alter table staff_records enable row level security;
+alter table staff_attendance enable row level security;
+alter table products enable row level security;
+alter table certificates enable row level security;
+alter table messages enable row level security;
+alter table notifications enable row level security;
+alter table audit_logs enable row level security;
+
+create policy "staff manage staff_records" on staff_records for all using (is_staff_or_above());
+create policy "staff manage staff_attendance" on staff_attendance for all using (is_staff_or_above());
+create policy "staff manage products" on products for all using (is_staff_or_above());
+create policy "public read active products" on products for select using (is_active = true);
+create policy "staff manage certificates" on certificates for all using (is_staff_or_above());
+create policy "students read own certificates" on certificates for select using (student_profile_id = auth.uid());
+create policy "public insert messages" on messages for insert with check (true);
+create policy "staff manage messages" on messages for all using (is_staff_or_above());
+create policy "staff manage notifications" on notifications for all using (is_staff_or_above());
+create policy "staff read audit_logs" on audit_logs for select using (is_staff_or_above());
+create policy "staff insert audit_logs" on audit_logs for insert with check (is_staff_or_above());
+
+-- ------------------------------------------------------------
+-- Admin write access on existing public-read tables (appointments,
+-- courses, course_batches, services, categories, team, gallery, blog,
+-- faqs, testimonials, site_settings). Public policies above already
+-- allow reads; these add staff-or-above write access.
+-- ------------------------------------------------------------
+create policy "staff manage appointments" on appointments for all using (is_staff_or_above());
+create policy "staff manage courses" on courses for all using (is_staff_or_above());
+create policy "staff manage course_batches" on course_batches for all using (is_staff_or_above());
+create policy "staff manage services" on services for all using (is_staff_or_above());
+create policy "staff manage service_categories" on service_categories for all using (is_staff_or_above());
+create policy "staff manage service_brands" on service_brands for all using (is_staff_or_above());
+create policy "staff manage service_related" on service_related for all using (is_staff_or_above());
+create policy "staff manage team_members" on team_members for all using (is_staff_or_above());
+create policy "staff manage gallery_images" on gallery_images for all using (is_staff_or_above());
+create policy "staff manage blog_posts" on blog_posts for all using (is_staff_or_above());
+create policy "staff manage faqs" on faqs for all using (is_staff_or_above());
+create policy "staff manage testimonials" on testimonials for all using (is_staff_or_above());
+create policy "staff manage site_settings" on site_settings for all using (is_staff_or_above());
+
+-- ------------------------------------------------------------
+-- NOTIFICATION TRIGGERS
+-- Auto-populate the notifications table (shown in the admin
+-- Notification Center) whenever a customer-facing action happens.
+-- ------------------------------------------------------------
+create or replace function public.notify_new_appointment()
+returns trigger as $$
+begin
+  insert into public.notifications (type, title, body)
+  values ('appointment', 'New appointment booked', new.customer_name || ' — ' || new.appointment_date || ' ' || new.appointment_time);
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_appointment_created on appointments;
+create trigger on_appointment_created
+  after insert on appointments
+  for each row execute procedure public.notify_new_appointment();
+
+create or replace function public.notify_new_message()
+returns trigger as $$
+begin
+  insert into public.notifications (type, title, body)
+  values ('system', 'New contact message', coalesce(new.sender_name, 'Someone') || ': ' || coalesce(new.subject, left(coalesce(new.body, ''), 60)));
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_message_created on messages;
+create trigger on_message_created
+  after insert on messages
+  for each row execute procedure public.notify_new_message();
+
+create or replace function public.notify_new_review()
+returns trigger as $$
+begin
+  insert into public.notifications (type, title, body)
+  values ('review', 'New customer review', new.customer_name || ' left a ' || new.rating || '-star review');
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_review_created on testimonials;
+create trigger on_review_created
+  after insert on testimonials
+  for each row execute procedure public.notify_new_review();
+
+-- ------------------------------------------------------------
+-- STUDENTS (enrollment records only — not linked to auth/portal)
+-- ------------------------------------------------------------
+create table if not exists students (
+  id uuid primary key default uuid_generate_v4(),
+  photo_url text,
+  name text not null,
+  gender text check (gender in ('female','male','other','prefer_not_to_say')),
+  phone text,
+  email text,
+  address text,
+  course_id uuid references courses(id) on delete set null,
+  enrollment_date date not null default current_date,
+  status text not null default 'enrolled' check (status in ('enrolled','active','completed','dropped')),
+  guardian_name text,
+  emergency_contact text,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table students enable row level security;
+create policy "staff manage students" on students for all using (is_staff_or_above());

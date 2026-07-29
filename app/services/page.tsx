@@ -6,6 +6,7 @@ import BrandDivider from "@/components/BrandDivider";
 import ServiceCard from "@/components/ServiceCard";
 import { getServiceCategories, getServices } from "@/lib/get-data";
 import { categoryImages, serviceImageOverrides } from "@/data/service-images";
+import ServiceSchema from "@/components/schema/ServiceSchema";
 
 export const metadata: Metadata = {
   title: "Services & Pricing",
@@ -20,6 +21,7 @@ export default async function ServicesPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
+      <ServiceSchema services={services} />
       <Breadcrumbs items={[{ "label": "Services" }]} />
       <SectionHeading
         eyebrow="Services & Pricing"

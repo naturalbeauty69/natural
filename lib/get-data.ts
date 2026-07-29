@@ -4,6 +4,8 @@ import { services as localServices, serviceCategories as localCategories } from 
 import { galleryImages as localGallery } from "@/data/gallery";
 import { testimonials as localTestimonials, Testimonial } from "@/data/testimonials";
 import { faqs as localFaqs, Faq } from "@/data/faq";
+import { courses as localCourses, Course } from "@/data/courses";
+import { blogPosts as localBlogPosts, BlogPost } from "@/data/blog";
 import { TeamMember, Service, ServiceCategory, ContactSettings } from "@/lib/types";
 import { GalleryImage } from "@/data/gallery";
 
@@ -94,6 +96,60 @@ export async function getFaqs(): Promise<Faq[]> {
     .order("display_order");
   if (error || !data) return localFaqs;
   return data as Faq[];
+}
+
+export async function getCourses(): Promise<Course[]> {
+  if (!isSupabaseConfigured || !supabase) return localCourses;
+  const { data, error } = await supabase
+    .from("courses")
+    .select("slug, name, category, level, duration, price")
+    .eq("is_active", true)
+    .order("display_order");
+  if (error || !data) return localCourses;
+  return data.map((row: any) => ({
+    slug: row.slug,
+    name: row.name,
+    category: row.category ?? "Other",
+    level: row.level ?? "",
+    duration: row.duration ?? "",
+    fee: Number(row.price) || 0,
+  }));
+}
+
+export async function getBlogPosts(): Promise<BlogPost[]> {
+  if (!isSupabaseConfigured || !supabase) return localBlogPosts;
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("slug, title, cover_image_caption, cover_image_url, content, category, author, seo_keywords, published_at")
+    .eq("is_active", true)
+    .order("published_at", { ascending: false });
+  if (error || !data) return localBlogPosts;
+  return data.map((row: any) => ({
+    slug: row.slug,
+    title: row.title,
+    coverImageCaption: row.cover_image_caption ?? "",
+    coverImageUrl: row.cover_image_url,
+    content: row.content,
+    category: row.category ?? "",
+    author: row.author ?? "Natural Beauty Clinic & Academy",
+    seoKeywords: row.seo_keywords ?? [],
+    publishedAt: row.published_at,
+  }));
+}
+
+export interface SeoSettings {
+  defaultTitle: string;
+  titleTemplate: string;
+  defaultDescription: string;
+  keywords: string;
+  robotsIndex: boolean;
+}
+
+export async function getSeoSettings(): Promise<SeoSettings | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data, error } = await supabase.from("site_settings").select("value").eq("key", "seo_settings").single();
+  if (error || !data) return null;
+  return data.value as SeoSettings;
 }
 
 export async function getContactSettings(): Promise<ContactSettings> {

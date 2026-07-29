@@ -1,15 +1,16 @@
-import { blogPosts } from "@/data/blog";
+import { getBlogPosts } from "@/lib/get-data";
 
-const base = "https://naturalbeautyclinic.com.np";
+const base = "https://naturalbeauty.com.np";
 
 const staticRoutes = [
-  "", "/about", "/services", "/academy", "/gallery", "/team", "/contact",
+  "", "/about", "/services", "/academy", "/compare-courses", "/gallery", "/team", "/contact",
   "/appointment", "/blog", "/testimonials", "/faq",
   "/privacy", "/terms", "/refund-policy", "/cookie-policy",
 ];
 
 export async function GET() {
   const now = new Date().toISOString();
+  const blogPosts = await getBlogPosts();
   const blogRoutes = blogPosts.map((p) => `/blog/${p.slug}`);
   const urls = [...staticRoutes, ...blogRoutes];
 

@@ -190,6 +190,28 @@ insert into team_members (slug, name, role, bio, photo_url, display_order) value
    '/images/team/susmita-gautam.jpg', 6)
 on conflict (slug) do nothing;
 
+update team_members set gallery = array[
+  '/images/team-gallery/Krishna-gurung 1.webp',
+  '/images/team-gallery/Krishna-gurung2.webp',
+  '/images/team-gallery/Krishna-gurung3.webp',
+  '/images/team-gallery/Krishna-gurung4.webp',
+  '/images/team-gallery/Krishna-gurung5.webp'
+] where slug = 'krishna-gurung';
+
+update team_members set gallery = array[
+  '/images/team-gallery/Sandip1.webp',
+  '/images/team-gallery/Sandip2.webp',
+  '/images/team-gallery/Sandip3.webp',
+  '/images/team-gallery/Sandip4.webp',
+  '/images/team-gallery/Sandip5.webp',
+  '/images/team-gallery/Sandip6.webp',
+  '/images/team-gallery/Sandip7.webp',
+  '/images/team-gallery/Sandip8.webp',
+  '/images/team-gallery/Sandip9.webp',
+  '/images/team-gallery/Sandip10.webp',
+  '/images/team-gallery/Sandip11.webp'
+] where slug = 'sandip-thakur';
+
 -- ---------- SITE SETTINGS ----------
 insert into site_settings (key, value) values
   ('contact', '{
@@ -281,3 +303,239 @@ insert into site_settings (key, value) values
     {"year": "2026", "title": "Looking Ahead", "points": ["Continuing to provide world-class beauty services and practical education", "Expanding digital learning, advanced technologies, and opportunities for students", "Working toward becoming one of Nepal''s most trusted and respected beauty clinics and academies"]}
   ]')
 on conflict (key) do update set value = excluded.value, updated_at = now();
+
+-- ---------- BLOG POSTS (author-bylined batch 2) ----------
+insert into blog_posts (slug, title, cover_image_caption, content, category, author, published_at, seo_keywords, display_order) values
+  ('ultimate-guide-to-hydrafacial-in-kathmandu-benefits-process-and-local-prices', 'Ultimate Guide to HydraFacial in Kathmandu: Benefits, Process, and Local Prices', 'HydraFacial treatment session at Natural Beauty Clinic & Academy.', 'If you''ve been researching ways to get brighter, smoother, more hydrated skin without downtime, you''ve likely come across HydraFacial. It''s one of the most requested treatments at our clinic, and for good reason — it delivers visible results after a single session with none of the redness or peeling associated with harsher treatments.
+
+## What Is a HydraFacial?
+
+HydraFacial is a multi-step skin resurfacing treatment that cleanses, exfoliates, extracts impurities, and infuses the skin with hydrating serums — all in one session. Unlike traditional facials, it uses a device that combines suction-based exfoliation with simultaneous serum delivery, so dead skin is lifted away while nutrients are pushed in at the same time.
+
+## Who Is It For?
+
+HydraFacial suits most skin types, including sensitive skin, because the pressure and serums used are adjusted to your skin''s condition during consultation. It''s popular among clients dealing with dullness, mild congestion, uneven texture, or simply wanting a healthy glow before an event.
+
+## The Process, Step by Step
+
+A typical session includes cleansing and gentle exfoliation, a mild acid peel to loosen debris, painless extraction of blackheads and congestion using suction, and a final infusion of hydrating and brightening serums tailored to your skin''s needs. The full treatment usually takes 45–60 minutes, and you can return to normal activities immediately.
+
+## What Results to Expect
+
+Most clients notice smoother texture and a visible glow immediately after their first session. For concerns like dullness or mild congestion, results build with regular treatments — we typically recommend a session every 4–6 weeks for maintenance, similar to international HydraFacial guidelines.
+
+## Local Pricing in Kathmandu
+
+At Natural Beauty Clinic & Academy, HydraFacial pricing depends on which serum protocol and add-ons are used for your skin. Our general facial and skin treatment pricing is listed on our Services page — during your consultation, we''ll recommend the right protocol and confirm the exact price before you commit to anything.
+
+## Practical Tips Before You Book
+
+Avoid strong exfoliating actives (like retinol or AHA/BHA products) for 2–3 days before your appointment. Skip waxing or threading on the treatment area right before your session. Let your esthetician know about any active breakouts, cold sores, or skin conditions beforehand so the protocol can be adjusted safely.
+
+If you''re looking for a reliable, low-downtime way to refresh your skin — whether for a special occasion or as part of a regular skincare routine — HydraFacial is one of the safest, most consistent options available, and one I personally recommend to clients who are new to professional skin treatments.', 'Skin Care', 'Archana Silwal Kadel', '2026-08-01', array['HydraFacial Kathmandu','HydraFacial Nepal price','Facial Treatment Kathmandu','Skin Care Nepal','Natural Beauty Clinic HydraFacial'], 100),
+  ('the-ultimate-pre-bridal-skincare-timeline-for-nepalese-brides-6-month-plan', 'The Ultimate Pre-Bridal Skincare Timeline for Nepalese Brides (6-Month Plan)', 'Bridal skincare consultation and treatment at Natural Beauty Clinic & Academy.', 'Every bride wants clear, radiant skin on her wedding day — but rushing skincare treatments in the final week rarely gives real results, and can sometimes backfire with irritation or breakouts. The best approach starts months in advance, giving your skin time to respond gradually and safely. Here''s the timeline I walk my bridal clients through.
+
+## 6 Months Before: Build the Foundation
+
+This is the time to get a proper skin consultation and start a consistent daily routine — cleansing, moisturizing, and daily sunscreen, non-negotiably. If you have ongoing concerns like pigmentation, acne scarring, or dullness, this is also when to start a course of professional facials or skin treatments, since these need repetition over time to show real change.
+
+## 4 Months Before: Address Specific Concerns
+
+With a solid routine in place, this is the window to consider treatments like chemical peels, advanced facials, or pigmentation-focused sessions, spaced a few weeks apart. Avoid starting anything aggressive or experimental this close to the wedding without first testing how your skin reacts.
+
+## 2 Months Before: Refine and Maintain
+
+Continue your regular facials every 3–4 weeks. This is a good time for a professional skin analysis to check progress and adjust your routine. Avoid introducing brand-new products or treatments you haven''t tried before — your skin should be in a stable, predictable rhythm by now.
+
+## 1 Month Before: Polish, Don''t Experiment
+
+Stick to treatments you know your skin tolerates well. A gentle, hydrating facial 2–3 weeks before the wedding is ideal for a final glow without risking irritation. This is not the time to try a new peel or aggressive treatment for the first time.
+
+## Final Week: Keep It Simple
+
+In the last week, avoid any new products, treatments, or extractions. A light hydrating facial 3–5 days before the event (not the day before) gives your skin time to settle. Prioritize sleep, hydration, and stress management — they show on your skin more than any last-minute treatment can.
+
+## Practical Tips
+
+Always patch-test new products weeks in advance, never the week of. Keep your skincare consistent even during pre-wedding stress and travel. Communicate openly with your esthetician about your wedding date so every treatment is timed correctly, with no surprises.
+
+Every bride''s skin is different, which is why we recommend starting with a one-on-one consultation to build a timeline around your specific skin, not a generic checklist.', 'Skin Care', 'Archana Silwal Kadel', '2026-08-03', array['Pre-Bridal Skincare Nepal','Bridal Skincare Timeline','Bridal Facial Kathmandu','Wedding Skincare Nepal','Bridal Skin Prep'], 100),
+  ('hair-botox-vs-keratin-treatment-in-nepal', 'Hair Botox vs. Keratin Treatment in Nepal', 'Hair Botox and Keratin treatment comparison at Natural Beauty Clinic & Academy.', 'Two of the most common questions I get at the salon are "what''s the difference between Hair Botox and Keratin?" and "which one is right for me?" Both treatments smooth and strengthen hair, but they work differently and suit different hair concerns — here''s how to tell them apart.
+
+## What Keratin Treatment Does
+
+Keratin treatment works by coating the hair shaft with keratin protein, sealing the cuticle and reducing frizz. It''s especially effective for very curly, frizzy, or chemically damaged hair that needs significant smoothing. Results typically last 3–5 months depending on hair type and aftercare.
+
+## What Hair Botox Does
+
+Despite the name, Hair Botox contains no actual botulinum toxin — it''s a deep conditioning treatment infused with proteins, vitamins, and amino acids that fill in damaged areas of the hair shaft. It focuses more on repairing and nourishing than heavy smoothing, making it gentler and better suited to fine, damaged, or color-treated hair that needs strengthening rather than straightening.
+
+## Key Differences
+
+Keratin gives a straighter, sleeker finish and holds up longer on very frizzy hair. Hair Botox gives a softer, more natural, bouncier finish and is generally considered gentler on the hair over repeated use. Keratin treatments traditionally use formaldehyde-releasing chemicals (though many modern salons, including ours, use formaldehyde-free formulas) — always ask your salon which formula they use.
+
+## Which One Should You Choose?
+
+If your main concern is frizz and you want straighter, smoother hair with strong hold, Keratin is usually the better fit. If your hair is fine, damaged, over-processed, or color-treated and needs repair and nourishment more than straightening, Hair Botox is often the gentler choice. During consultation, we assess your hair''s condition and porosity before recommending either.
+
+## Practical Aftercare Tips
+
+Use sulfate-free shampoo to extend the life of either treatment. Avoid tying your hair up or tucking it behind your ears for the first 24–72 hours after Keratin treatments specifically, as instructed by your stylist. Space out chemical treatments — don''t combine color and smoothing treatments too close together, as this increases damage risk.
+
+Both treatments can give beautiful results when matched to the right hair type. If you''re unsure which is right for you, come in for a consultation — we''ll examine your hair''s condition first rather than guessing.', 'Hair Treatment', 'Sandip Thakur', '2026-08-05', array['Hair Botox vs Keratin','Hair Botox Nepal','Keratin Treatment Kathmandu','Hair Smoothening Nepal','Hair Treatment Comparison'], 100),
+  ('why-hair-fall-increases-in-kathmandu-how-to-stop-it', 'Why Hair Fall Increases in Kathmandu & How to Stop It', 'Scalp and hair fall consultation at Natural Beauty Clinic & Academy.', 'Many clients tell me their hair fall gets noticeably worse after moving to or living in Kathmandu, especially during certain seasons. This isn''t just anecdotal — there are real environmental and lifestyle factors at play in the valley that contribute to increased shedding.
+
+## Why Kathmandu''s Environment Affects Hair
+
+Kathmandu''s air quality, particularly dust and pollution levels, can clog the scalp''s pores and follicles, weakening hair over time. Hard water common in parts of the valley can also leave mineral buildup on the scalp, making hair drier and more prone to breakage. Seasonal dryness during winter months adds further stress.
+
+## Common Contributing Factors
+
+Beyond environment, hair fall is often driven by stress, poor scalp hygiene, harsh or infrequent washing habits, nutritional gaps (especially iron, protein, and biotin deficiencies), and hormonal changes. Tight hairstyles worn daily can also contribute to traction-related thinning over time.
+
+## What You Can Do: Practical Steps
+
+Wash your scalp regularly to remove dust and product buildup — how often depends on your hair type, but don''t let buildup sit for too long. Use a clarifying shampoo occasionally if you''re in a hard-water area. Deep condition or oil your scalp weekly to counter environmental dryness. Eat a balanced diet with enough protein and iron, since hair is largely built from protein. Avoid excessively tight hairstyles worn every day.
+
+## When Professional Treatment Helps
+
+If home care isn''t enough, a professional scalp analysis can identify whether the cause is buildup, dryness, breakage, or something that needs a dermatologist''s input. Scalp treatments and targeted hair spa sessions can meaningfully improve scalp health and reduce shedding caused by environmental stress — though sudden, severe, or patchy hair loss should always be checked by a doctor, since it may point to a medical cause treatments alone won''t fix.
+
+## A Realistic Expectation
+
+Some daily shedding (50–100 hairs) is completely normal. What matters is whether you''re seeing a noticeable increase, thinning patches, or a receding hairline — those are signs to get a proper consultation rather than guess with random products.', 'Hair Care', 'Sandip Thakur', '2026-08-07', array['Hair Fall Kathmandu','Hair Fall Treatment Nepal','Scalp Treatment Kathmandu','Hair Care Nepal','Hair Loss Causes'], 100),
+  ('gel-extensions-vs-acrylic-nails', 'Gel Extensions vs. Acrylic Nails', 'Gel and acrylic nail extension comparison at Natural Beauty Clinic & Academy.', 'Choosing between gel extensions and acrylic is one of the most common questions I get from clients booking their first nail appointment. Both create beautiful, long-lasting extensions, but they differ in application, feel, and maintenance — here''s what to actually consider.
+
+## What Acrylic Nails Are
+
+Acrylic extensions are made by mixing a liquid monomer with a powder polymer, which hardens into a strong, durable layer over a nail tip or form. Acrylic is known for being very strong and long-lasting, which makes it popular for clients who are hard on their hands or want maximum durability.
+
+## What Gel Extensions Are
+
+Gel extensions use a gel product cured under UV or LED light rather than air-drying. Gel tends to feel lighter and more flexible than acrylic, with a glossier, more natural-looking finish straight off the table without needing a separate topcoat.
+
+## Comparing the Two
+
+Acrylic is generally more affordable and slightly more durable for very active hands, but has a stronger odor during application and can feel heavier. Gel is lighter, glossier, and gentler on the natural nail, but can be pricier and is somewhat less impact-resistant than acrylic for heavy daily wear.
+
+## Which Should You Choose?
+
+If you work with your hands a lot or want maximum strength, acrylic is often the more practical choice. If you prioritize a natural, lightweight feel and don''t mind slightly more careful handling, gel is usually preferred. Both can look equally beautiful — the right choice comes down to your lifestyle and nail habits, not one being objectively better.
+
+## Practical Aftercare Tips
+
+Always let a technician remove extensions properly — never pick or pull them off, as this can damage your natural nail underneath. Keep cuticles moisturized between appointments to prevent lifting. Get fills every 2–3 weeks to keep extensions looking neat and prevent breakage at the regrowth line.
+
+Whichever you choose, the technician''s skill matters more than the material — proper prep and application is what actually determines how long your extensions last and how healthy your natural nails stay underneath.', 'Nail Care', 'Aasha Limbu', '2026-08-09', array['Gel vs Acrylic Nails','Nail Extension Kathmandu','Nail Technician Nepal','Gel Nails Nepal','Acrylic Nails Kathmandu'], 100),
+  ('top-10-bridal-nail-art-trends-in-nepal', 'Top 10 Bridal Nail Art Trends in Nepal', 'Bridal nail art design at Natural Beauty Clinic & Academy.', 'Bridal nail art has become just as important as bridal makeup for many of my clients — it''s a small detail that shows up in every ring photo. Here are the trends I''m seeing the most requests for this wedding season in Nepal.
+
+## 1. Classic French with a Twist
+
+The traditional French tip reimagined with gold micro-detailing or a colored line instead of plain white — elegant and photograph-friendly.
+
+## 2. Rose Gold Marble
+
+Soft marble swirls in rose gold and cream tones pair beautifully with most bridal jewelry and mehndi designs.
+
+## 3. Minimalist Nude with Gold Accents
+
+For brides who want understated elegance, a nude base with a single gold accent nail keeps the focus on the ring.
+
+## 4. Chrome and Pearl Finishes
+
+Metallic chrome or pearlescent finishes catch the light beautifully in photos and videos, especially indoor wedding lighting.
+
+## 5. Red and Gold Traditional
+
+A nod to traditional bridal colors — deep red with fine gold detailing, popular for brides wanting nails that match a red bridal saree or lehenga.
+
+## 6. Almond and Coffin Shapes
+
+These elongated shapes are the most requested for bridal extensions this season, as they photograph elegantly without looking too dramatic.
+
+## 7. Delicate Floral Accents
+
+Hand-painted tiny florals on one or two accent nails, popular for garden or daytime weddings.
+
+## 8. Matte and Glossy Combinations
+
+Mixing a matte base with glossy accent nails adds subtle dimension without being too busy.
+
+## 9. Pastel Marble
+
+Soft pink and gold marble combinations for brides wanting something delicate rather than bold.
+
+## 10. Custom Monogram or Date Accent
+
+A tiny hand-painted initial or wedding date on one accent nail — a popular personalized touch for brides who want something meaningful in their photos.
+
+## Practical Booking Tips
+
+Book your bridal nail trial at the same time as your makeup trial, ideally 3–4 weeks before the wedding, so you can see how everything photographs together. On the wedding day itself, book nails early enough that polish is fully cured before you start getting dressed.
+
+Bring reference photos to your consultation — even a rough idea helps us tailor the design to your outfit, jewelry, and mehndi pattern.', 'Nail Care', 'Aasha Limbu', '2026-08-11', array['Bridal Nail Art Nepal','Bridal Nails Kathmandu','Wedding Nail Art','Nail Trends Nepal','Bridal Nail Trends'], 100),
+  ('step-by-step-10-minute-everyday-makeup-routine', 'Step-by-Step 10-Minute Everyday Makeup Routine', 'Quick everyday makeup routine demonstration at Natural Beauty Clinic & Academy.', 'Most people don''t need — or have time for — a full glam routine every morning. Here''s the quick, practical everyday routine I recommend to clients who want to look polished in 10 minutes or less.
+
+## 1. Prep Your Skin (1 minute)
+
+Apply a lightweight moisturizer and sunscreen. This is the single most important step — good skin prep means less makeup is needed overall.
+
+## 2. Even Out with a Light Base (2 minutes)
+
+Use a tinted moisturizer, BB cream, or light-coverage foundation with your fingers or a damp sponge for a quick, natural finish. Skip heavy full-coverage products for everyday wear — they take longer to apply and blend.
+
+## 3. Conceal Only Where Needed (1 minute)
+
+Spot-conceal under the eyes and any obvious blemishes rather than covering your whole face — this saves time and looks more natural.
+
+## 4. Set with Minimal Powder (1 minute)
+
+A light dusting of powder only on the T-zone keeps shine down without looking cakey or overdone.
+
+## 5. Add Color to Cheeks (1 minute)
+
+A cream or liquid blush blended with fingers is faster than powder and gives a natural flush. Apply to the apples of your cheeks and blend upward.
+
+## 6. Define Eyes Quickly (2 minutes)
+
+A neutral eyeshadow swept across the lid, a quick line of eyeliner along the upper lash line, and one coat of mascara is enough for daytime definition without a full eye look.
+
+## 7. Shape Brows (1 minute)
+
+A few quick strokes with a brow pencil or gel to fill sparse areas makes a bigger difference to your overall look than people expect.
+
+## 8. Finish with Lips (1 minute)
+
+A tinted lip balm or your everyday lipstick shade completes the look in seconds.
+
+## Practical Tips
+
+Keep your everyday kit to 6–7 products max — fewer decisions means faster mornings. Multi-use products (like a cream stick you can use on cheeks and lips) save real time. Practice the routine a few times on a day off so it becomes muscle memory before you need to rely on it for a rushed morning.', 'Makeup', 'Asmita Bista', '2026-08-13', array['Everyday Makeup Routine','Quick Makeup Nepal','10 Minute Makeup','Daily Makeup Tips','Natural Makeup Look'], 100),
+  ('how-to-choose-the-right-foundation-shade', 'How to Choose the Right Foundation Shade', 'Foundation shade matching consultation at Natural Beauty Clinic & Academy.', 'Picking the wrong foundation shade is one of the most common makeup mistakes I see — even with beautiful application, the wrong shade makes everything look off. Here''s how to actually get it right.
+
+## Understand Undertone First
+
+Before shade depth, figure out your undertone: warm (yellow/golden), cool (pink/blue), or neutral (a mix of both). Check the veins on your wrist in natural light — greenish veins usually suggest warm undertones, bluish veins suggest cool, and if you can''t tell, you''re likely neutral.
+
+## Test on Your Jawline, Not Your Hand
+
+Your hand and face rarely match in tone. Always test foundation shades along your jawline and blend down toward your neck — the shade that disappears into your skin, rather than sitting as a visible line, is your match.
+
+## Test in Natural Light
+
+Indoor store lighting is notoriously unreliable. Step outside or near a window before deciding — a shade that looks perfect under fluorescent lights can look completely wrong in daylight.
+
+## Consider Seasonal Changes
+
+Your skin tone shifts slightly with sun exposure across the year. Many people need a slightly different foundation shade in summer versus winter — it''s normal, not a sign you chose wrong the first time.
+
+## When Between Two Shades
+
+If you''re between two shades, size down rather than up — foundation almost always oxidizes slightly darker after 15–20 minutes on the skin, so the lighter of the two options usually ends up being the better match.
+
+## Practical Tips
+
+Always let the foundation sit for a few minutes before deciding — first impressions can be misleading before it settles and oxidizes. Bring a small mirror and check your match against your neck and chest, not just your face, to avoid an obvious mismatch line. If you''re unsure, ask for a professional shade-matching consultation rather than guessing — it takes a few minutes and saves you from an expensive mistake.
+
+A well-matched foundation should be nearly invisible on the skin — the goal is even, natural-looking coverage, not a visible layer of product.', 'Makeup', 'Asmita Bista', '2026-08-15', array['Foundation Shade Matching','Choose Foundation Shade','Makeup Tips Nepal','Foundation Undertone','Makeup Matching Guide'], 100)
+on conflict (slug) do nothing;

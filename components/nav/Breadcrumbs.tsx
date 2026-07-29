@@ -6,7 +6,7 @@ export interface BreadcrumbItem {
   href?: string; // omit on the current/last item
 }
 
-const BASE = "https://naturalbeautyclinic.com.np";
+const BASE = "https://naturalbeauty.com.np";
 
 export default function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
   const withHome: BreadcrumbItem[] = [{ label: "Home", href: "/" }, ...items];

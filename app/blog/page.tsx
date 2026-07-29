@@ -2,14 +2,15 @@ import type { Metadata } from "next";
 import SectionHeading from "@/components/SectionHeading";
 import Breadcrumbs from "@/components/nav/Breadcrumbs";
 import BlogCard from "@/components/BlogCard";
-import { blogPosts } from "@/data/blog";
+import { getBlogPosts } from "@/lib/get-data";
 
 export const metadata: Metadata = {
   title: "Blog",
   description: "Skin care, hair care, makeup, and beauty education articles from Natural Beauty Clinic & Academy.",
 };
 
-export default function BlogIndexPage() {
+export default async function BlogIndexPage() {
+  const blogPosts = await getBlogPosts();
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
       <Breadcrumbs items={[{ "label": "Blog" }]} />

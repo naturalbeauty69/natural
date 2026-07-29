@@ -95,6 +95,7 @@ export const navItems: NavItem[] = [
           heading: "Explore",
           icon: BookOpen,
           links: [
+            { label: "Compare Courses", href: "/compare-courses" },
             { label: "Gallery — Training Photos", href: "/gallery#training" },
             { label: "Student Success Stories", href: "/testimonials" },
             { label: "Meet the Trainers", href: "/team" },

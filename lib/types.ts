@@ -5,6 +5,7 @@ export interface TeamMember {
   role: string;
   bio: string;
   photo_url: string;
+  gallery?: string[];
   specialization?: string | null;
   experience_years?: number | null;
   display_order: number;

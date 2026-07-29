@@ -134,7 +134,7 @@ export default async function HomePage() {
                 {director.bio}
               </p>
               <Link href="/about" className="btn-primary mt-6 inline-flex">
-                Read the Director's Message
+                Read the Director&apos;s Message
               </Link>
             </div>
           </div>

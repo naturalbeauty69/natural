@@ -7,6 +7,7 @@
 export default function BrandDivider({ className = "" }: { className?: string }) {
   return (
     <div className={`flex justify-center py-2 ${className}`} aria-hidden="true">
+      {/* eslint-disable-next-line @next/next/no-img-element -- decorative, fluid-width SVG; next/image needs a sized container which doesn't fit this inline divider */}
       <img
         src="/images/brand/botanical-line.svg"
         alt=""

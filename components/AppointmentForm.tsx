@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { Service } from "@/lib/types";
+import { trackAppointmentBooking } from "@/lib/analytics";
 
 type Status = "idle" | "submitting" | "success" | "error" | "not_configured";
 
@@ -20,11 +21,14 @@ export default function AppointmentForm({ services }: { services: Service[] }) {
     }
 
     setStatus("submitting");
+    const serviceId = form.get("service") as string | null;
+    const selectedService = services.find((s) => (s.id ?? s.slug) === serviceId);
+
     const { error } = await supabase.from("appointments").insert({
       customer_name: form.get("name"),
       phone: form.get("phone"),
       email: form.get("email") || null,
-      service_id: form.get("service") || null,
+      service_id: serviceId || null,
       appointment_date: form.get("date"),
       appointment_time: form.get("time"),
       notes: form.get("notes") || null,
@@ -34,6 +38,7 @@ export default function AppointmentForm({ services }: { services: Service[] }) {
       setErrorMessage(error.message);
       setStatus("error");
     } else {
+      trackAppointmentBooking(selectedService?.name);
       setStatus("success");
     }
   }

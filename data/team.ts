@@ -17,6 +17,13 @@ export const team: TeamMember[] = [
     role: "Accountant & Manager",
     bio: "Responsible for accounting, financial management, inventory control, supplier coordination, customer service, daily business operations, administration, and ensuring the smooth operation of the clinic and academy.",
     photo_url: "/images/team/krishna-gurung.jpg",
+    gallery: [
+      "/images/team-gallery/Krishna-gurung 1.webp",
+      "/images/team-gallery/Krishna-gurung2.webp",
+      "/images/team-gallery/Krishna-gurung3.webp",
+      "/images/team-gallery/Krishna-gurung4.webp",
+      "/images/team-gallery/Krishna-gurung5.webp",
+    ],
     display_order: 2,
   },
   {
@@ -25,6 +32,19 @@ export const team: TeamMember[] = [
     role: "Hairdresser",
     bio: "Professional Hairdresser specializing in modern haircuts, hairstyling, hair coloring, hair spa, hair treatments, and personalized grooming services. Dedicated to helping clients achieve healthy, stylish, and confident looks.",
     photo_url: "/images/team/sandip-thakur.jpg",
+    gallery: [
+      "/images/team-gallery/Sandip1.webp",
+      "/images/team-gallery/Sandip2.webp",
+      "/images/team-gallery/Sandip3.webp",
+      "/images/team-gallery/Sandip4.webp",
+      "/images/team-gallery/Sandip5.webp",
+      "/images/team-gallery/Sandip6.webp",
+      "/images/team-gallery/Sandip7.webp",
+      "/images/team-gallery/Sandip8.webp",
+      "/images/team-gallery/Sandip9.webp",
+      "/images/team-gallery/Sandip10.webp",
+      "/images/team-gallery/Sandip11.webp",
+    ],
     display_order: 3,
   },
   {

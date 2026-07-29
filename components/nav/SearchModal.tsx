@@ -11,6 +11,7 @@ import { faqs } from "@/data/faq";
 import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 import { useLockBodyScroll } from "@/lib/hooks/useLockBodyScroll";
 import { useEscapeKey } from "@/lib/hooks/useEscapeKey";
+import { trackSearch } from "@/lib/analytics";
 
 interface SearchResult {
   type: "Page" | "Service" | "Blog" | "Team" | "FAQ";
@@ -24,6 +25,7 @@ const staticPages: SearchResult[] = [
   { type: "Page", title: "About", href: "/about" },
   { type: "Page", title: "Services & Pricing", href: "/services" },
   { type: "Page", title: "Academy", href: "/academy" },
+  { type: "Page", title: "Compare Courses", href: "/compare-courses" },
   { type: "Page", title: "Gallery", href: "/gallery" },
   { type: "Page", title: "Team", href: "/team" },
   { type: "Page", title: "Blog", href: "/blog" },
@@ -125,7 +127,10 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
                 <Link
                   key={`${r.type}-${r.title}`}
                   href={r.href}
-                  onClick={onClose}
+                  onClick={() => {
+                    trackSearch(query);
+                    onClose();
+                  }}
                   className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 hover:bg-emerald-50"
                 >
                   <div>

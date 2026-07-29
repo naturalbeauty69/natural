@@ -12,6 +12,7 @@ import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 import { useLockBodyScroll } from "@/lib/hooks/useLockBodyScroll";
 import { useEscapeKey } from "@/lib/hooks/useEscapeKey";
 import { ContactSettings } from "@/lib/types";
+import { trackGoogleMapsClick, trackSocialClick, trackPhoneClick } from "@/lib/analytics";
 
 export default function MobileSidebar({
   open,
@@ -136,7 +137,10 @@ export default function MobileSidebar({
                       <li key={link.label}>
                         <Link
                           href={link.href}
-                          onClick={onClose}
+                          onClick={() => {
+                            if (link.label === "Directions") trackGoogleMapsClick();
+                            onClose();
+                          }}
                           className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900"
                         >
                           <Icon className="h-3.5 w-3.5 text-gold-500" />
@@ -158,14 +162,14 @@ export default function MobileSidebar({
             </nav>
 
             <div className="border-t border-emerald-900/10 px-5 py-4">
-              <a href={`tel:${contact.phones[0]}`} className="flex items-center gap-2 text-sm text-emerald-900">
+              <a href={`tel:${contact.phones[0]}`} onClick={trackPhoneClick} className="flex items-center gap-2 text-sm text-emerald-900">
                 <Phone className="h-4 w-4 text-gold-500" /> {contact.phones[0]}
               </a>
               <p className="mt-1 text-xs text-ink-soft">{contact.businessHours}</p>
               <div className="mt-3 flex items-center gap-4 text-emerald-700">
-                <a href={contact.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook"><FacebookIcon className="h-4 w-4" /></a>
-                <a href={contact.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram"><InstagramIcon className="h-4 w-4" /></a>
-                <a href={contact.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok"><TikTokIcon className="h-4 w-4" /></a>
+                <a href={contact.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" onClick={() => trackSocialClick("facebook")}><FacebookIcon className="h-4 w-4" /></a>
+                <a href={contact.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" onClick={() => trackSocialClick("instagram")}><InstagramIcon className="h-4 w-4" /></a>
+                <a href={contact.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok" onClick={() => trackSocialClick("tiktok")}><TikTokIcon className="h-4 w-4" /></a>
               </div>
             </div>
           </motion.div>

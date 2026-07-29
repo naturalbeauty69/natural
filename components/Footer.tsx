@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import Image from "next/image";
 import { ContactSettings } from "@/lib/types";
 import { FacebookIcon, InstagramIcon, TikTokIcon } from "@/components/SocialIcons";
+import { trackSocialClick, trackPhoneClick, trackEmailClick, trackWhatsAppClick } from "@/lib/analytics";
 
 export default function Footer({ contact }: { contact: ContactSettings }) {
   return (
@@ -13,13 +17,13 @@ export default function Footer({ contact }: { contact: ContactSettings }) {
             Professional Beauty, Skin &amp; Hair Care | Training &amp; Certification
           </p>
           <div className="mt-5 flex items-center gap-4">
-            <a href={contact.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-cream/70 hover:text-gold-300">
+            <a href={contact.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" onClick={() => trackSocialClick("facebook")} className="text-cream/70 hover:text-gold-300">
               <FacebookIcon className="h-5 w-5" />
             </a>
-            <a href={contact.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-cream/70 hover:text-gold-300">
+            <a href={contact.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" onClick={() => trackSocialClick("instagram")} className="text-cream/70 hover:text-gold-300">
               <InstagramIcon className="h-5 w-5" />
             </a>
-            <a href={contact.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok" className="text-cream/70 hover:text-gold-300">
+            <a href={contact.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok" onClick={() => trackSocialClick("tiktok")} className="text-cream/70 hover:text-gold-300">
               <TikTokIcon className="h-5 w-5" />
             </a>
           </div>
@@ -36,15 +40,16 @@ export default function Footer({ contact }: { contact: ContactSettings }) {
           <ul className="mt-3 space-y-1 text-sm">
             {contact.phones.map((p) => (
               <li key={p}>
-                <a href={`tel:${p}`} className="hover:text-gold-300">{p}</a>
+                <a href={`tel:${p}`} onClick={trackPhoneClick} className="hover:text-gold-300">{p}</a>
               </li>
             ))}
             <li>
-              <a href={`mailto:${contact.email}`} className="hover:text-gold-300">{contact.email}</a>
+              <a href={`mailto:${contact.email}`} onClick={trackEmailClick} className="hover:text-gold-300">{contact.email}</a>
             </li>
             <li>
               <a
                 href={`https://wa.me/${contact.whatsapp.replace(/\D/g, "")}`}
+                onClick={trackWhatsAppClick}
                 className="hover:text-gold-300"
               >
                 WhatsApp
@@ -68,7 +73,7 @@ export default function Footer({ contact }: { contact: ContactSettings }) {
 
         <div>
           <p className="eyebrow flex items-center gap-1.5 text-gold-300">
-            <img src="/images/logo/icon-legal.png" alt="" className="h-3.5 w-3.5" />
+            <Image src="/images/logo/icon-legal.png" alt="" width={14} height={14} className="h-3.5 w-3.5" />
             Legal
           </p>
           <ul className="mt-3 space-y-1 text-sm">
