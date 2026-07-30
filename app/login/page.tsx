@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
@@ -9,7 +9,6 @@ import { createClient } from "@/lib/supabase-admin/browser";
 import { trackAdminLogin } from "@/lib/analytics";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/admin/dashboard";
   const suspended = searchParams.get("error") === "suspended";
@@ -26,18 +25,32 @@ function LoginForm() {
     setStatus("loading");
     setErrorMessage("");
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
+      if (error) {
+        setStatus("error");
+        setErrorMessage(error.message);
+        return;
+      }
+
+      trackAdminLogin();
+      // Hard navigation (not router.push/router.refresh): the session
+      // cookie was just written by the browser client's cookie adapter,
+      // and middleware needs to see it on a fresh request. Client-side
+      // router navigation can serve a cached RSC payload from before the
+      // cookie was set, causing a redirect loop or stuck loading state
+      // — this is a well-known gotcha with Supabase SSR + Next.js App
+      // Router, especially behind an edge cache like Cloudflare.
+      window.location.href = redirectTo;
+    } catch (err) {
+      // Catches a misconfigured Supabase client or any unexpected
+      // failure — without this, the UI would otherwise be stuck on
+      // "Signing in…" forever with no feedback.
       setStatus("error");
-      setErrorMessage(error.message);
-      return;
+      setErrorMessage(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     }
-
-    trackAdminLogin();
-    router.push(redirectTo);
-    router.refresh();
   }
 
   return (

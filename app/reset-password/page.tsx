@@ -21,14 +21,19 @@ export default function ResetPasswordPage() {
       return;
     }
     setStatus("loading");
-    const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) {
+        setStatus("error");
+        setErrorMessage(error.message);
+      } else {
+        setStatus("success");
+        setTimeout(() => router.push("/login"), 1500);
+      }
+    } catch (err) {
       setStatus("error");
-      setErrorMessage(error.message);
-    } else {
-      setStatus("success");
-      setTimeout(() => router.push("/login"), 1500);
+      setErrorMessage(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     }
   }
 
