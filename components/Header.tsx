@@ -4,13 +4,14 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, ShoppingBag } from "lucide-react";
 import { navItems } from "@/lib/nav-config";
 import HamburgerButton from "@/components/nav/HamburgerButton";
 import MegaMenu from "@/components/nav/MegaMenu";
 import MobileSidebar from "@/components/nav/MobileSidebar";
 import SearchModal from "@/components/nav/SearchModal";
 import { ContactSettings } from "@/lib/types";
+import { useCart } from "@/lib/cart-context";
 
 export default function Header({ contact }: { contact: ContactSettings }) {
   const [scrolled, setScrolled] = useState(false);
@@ -18,6 +19,7 @@ export default function Header({ contact }: { contact: ContactSettings }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const pathname = usePathname();
+  const { totalItems } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -105,6 +107,15 @@ export default function Header({ contact }: { contact: ContactSettings }) {
             <button onClick={openSearch} aria-label="Search" className="rounded-full p-2 hover:bg-emerald-50 md:hidden">
               <Search className="h-5 w-5 text-emerald-900" />
             </button>
+
+            <Link href="/cart" aria-label="Cart" className="relative rounded-full p-2 hover:bg-emerald-50">
+              <ShoppingBag className="h-5 w-5 text-emerald-900" />
+              {totalItems > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-gold-500 text-[10px] font-medium text-emerald-900">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
 
             <Link href="/appointment" className="btn-primary hidden md:inline-flex">
               Book Appointment

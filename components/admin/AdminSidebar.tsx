@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, CalendarCheck, GraduationCap, Users, UserCog, Briefcase,
-  Sparkles, Package, Image as ImageIcon, FileText, Star, Heart, Mail,
+  Sparkles, Package, ShoppingCart, Image as ImageIcon, FileText, Star, Heart, Mail,
   BarChart3, Award, Search, Settings, UsersRound, Bell,
-  DatabaseBackup, LogOut, type LucideIcon,
+  LogOut, type LucideIcon,
 } from "lucide-react";
 
 interface SidebarLink {
@@ -37,6 +37,7 @@ const sections: { heading: string; links: SidebarLink[] }[] = [
     links: [
       { label: "Services", href: "/admin/services", icon: Sparkles },
       { label: "Products", href: "/admin/products", icon: Package },
+      { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
       { label: "Gallery", href: "/admin/gallery", icon: ImageIcon },
       { label: "Blog", href: "/admin/blog", icon: FileText },
       { label: "Testimonials", href: "/admin/testimonials", icon: Heart },
@@ -58,7 +59,6 @@ const sections: { heading: string; links: SidebarLink[] }[] = [
       { label: "Website Settings", href: "/admin/settings", icon: Settings },
       { label: "Users", href: "/admin/users", icon: UsersRound },
       { label: "Notifications", href: "/admin/notifications", icon: Bell },
-      { label: "Backup", href: "/admin/backup", icon: DatabaseBackup },
     ],
   },
 ];

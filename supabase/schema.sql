@@ -343,25 +343,91 @@ create table if not exists staff_attendance (
 );
 
 -- ------------------------------------------------------------
--- PRODUCTS / INVENTORY
+-- PRODUCTS
+-- Simple product ordering (not a full inventory/ERP system — no
+-- SKU, barcode, batch, expiry, supplier, or purchase tracking).
 -- ------------------------------------------------------------
 create table if not exists products (
   id uuid primary key default uuid_generate_v4(),
+  slug text unique not null,
   name text not null,
-  category text,
-  brand text,
-  price numeric(10,2) not null default 0,
+  category text not null check (category in
+    ('Casmara', 'Lotus Professional', 'Paese', 'The Purest', 'Farmona', 'Homecare product', 'Others')),
+  price numeric(10,2) not null,
+  discount_price numeric(10,2),
+  stock_quantity int not null default 0,
+  suitable_for text,
+  ingredients text,
   description text,
   image_url text,
-  is_active boolean not null default true,
-  created_at timestamptz not null default now()
+  gallery_urls text[] default '{}',
+  is_active boolean not null default true, -- publish/hide
+  is_featured boolean not null default false,
+  display_order int not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
--- NOTE: Inventory management (stock, purchasing, suppliers, barcodes,
--- expiry tracking) and a Payments/transactions ledger were explicitly
--- scoped OUT per the business requirement update — this clinic runs
--- those processes manually outside this system. `products` above is
--- a showcase catalog only.
+create index if not exists idx_products_category on products(category);
+create index if not exists idx_products_active on products(is_active);
+create index if not exists idx_products_featured on products(is_featured);
+create index if not exists idx_products_name on products using gin (to_tsvector('english', name));
+
+alter table products enable row level security;
+create policy "public read active products" on products for select using (is_active = true);
+
+-- ------------------------------------------------------------
+-- ORDERS (no payment gateway — cash on delivery, confirmed by phone)
+-- ------------------------------------------------------------
+create table if not exists orders (
+  id uuid primary key default uuid_generate_v4(),
+  order_number text unique not null default ('NB-' || to_char(now(), 'YYMMDD') || '-' || lpad((floor(random() * 10000))::text, 4, '0')),
+  customer_name text not null,
+  phone text not null,
+  email text,
+  address text not null,
+  city text not null,
+  notes text,
+  total_price numeric(10,2) not null default 0,
+  status text not null default 'pending' check (status in
+    ('pending', 'confirmed', 'packed', 'shipped', 'delivered', 'cancelled')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists order_items (
+  id uuid primary key default uuid_generate_v4(),
+  order_id uuid not null references orders(id) on delete cascade,
+  product_id uuid references products(id) on delete set null,
+  product_name text not null, -- snapshot, survives product edits/deletion
+  unit_price numeric(10,2) not null, -- snapshot of price at order time
+  quantity int not null check (quantity > 0)
+);
+
+create index if not exists idx_orders_status on orders(status);
+create index if not exists idx_orders_created on orders(created_at desc);
+create index if not exists idx_order_items_order on order_items(order_id);
+
+alter table orders enable row level security;
+alter table order_items enable row level security;
+create policy "public can place orders" on orders for insert with check (true);
+create policy "public can add order items" on order_items for insert with check (true);
+
+-- Auto-generate a notification when a new order comes in (same
+-- pattern as appointments/messages/reviews above).
+create or replace function public.notify_new_order()
+returns trigger as $$
+begin
+  insert into public.notifications (type, title, body)
+  values ('system', 'New product order: ' || new.order_number, new.customer_name || ' — Rs. ' || new.total_price);
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_order_created on orders;
+create trigger on_order_created
+  after insert on orders
+  for each row execute procedure public.notify_new_order();
 
 -- ------------------------------------------------------------
 -- CERTIFICATES (issued to students on course completion)
@@ -419,7 +485,6 @@ create table if not exists audit_logs (
 -- ------------------------------------------------------------
 alter table staff_records enable row level security;
 alter table staff_attendance enable row level security;
-alter table products enable row level security;
 alter table certificates enable row level security;
 alter table messages enable row level security;
 alter table notifications enable row level security;
@@ -427,8 +492,6 @@ alter table audit_logs enable row level security;
 
 create policy "staff manage staff_records" on staff_records for all using (is_staff_or_above());
 create policy "staff manage staff_attendance" on staff_attendance for all using (is_staff_or_above());
-create policy "staff manage products" on products for all using (is_staff_or_above());
-create policy "public read active products" on products for select using (is_active = true);
 create policy "staff manage certificates" on certificates for all using (is_staff_or_above());
 create policy "students read own certificates" on certificates for select using (student_profile_id = auth.uid());
 create policy "public insert messages" on messages for insert with check (true);
@@ -450,6 +513,9 @@ create policy "staff manage services" on services for all using (is_staff_or_abo
 create policy "staff manage service_categories" on service_categories for all using (is_staff_or_above());
 create policy "staff manage service_brands" on service_brands for all using (is_staff_or_above());
 create policy "staff manage service_related" on service_related for all using (is_staff_or_above());
+create policy "staff manage products" on products for all using (is_staff_or_above());
+create policy "staff manage orders" on orders for all using (is_staff_or_above());
+create policy "staff manage order_items" on order_items for all using (is_staff_or_above());
 create policy "staff manage team_members" on team_members for all using (is_staff_or_above());
 create policy "staff manage gallery_images" on gallery_images for all using (is_staff_or_above());
 create policy "staff manage blog_posts" on blog_posts for all using (is_staff_or_above());

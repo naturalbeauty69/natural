@@ -19,13 +19,16 @@
     "react-dom": "19.1.0",
     "framer-motion": "12.42.2",
     "@supabase/supabase-js": "2.45.0",
-    "lucide-react": "0.400.0"
+    "lucide-react": "0.400.0",
+    "papaparse": "5.4.1",
+    "xlsx": "0.18.5"
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.0.0",
     "wrangler": "^4.20.0",
     "typescript": "5.5.4",
     "@types/node": "20.14.15",
+    "@types/papaparse": "5.3.14",
     "@types/react": "19.1.9",
     "@types/react-dom": "19.1.7",
     "tailwindcss": "3.4.7",

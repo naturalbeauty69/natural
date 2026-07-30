@@ -4,23 +4,26 @@ import Hero from "@/components/Hero";
 import SectionHeading from "@/components/SectionHeading";
 import BrandDivider from "@/components/BrandDivider";
 import ServiceCard from "@/components/ServiceCard";
+import ProductCard from "@/components/ProductCard";
 import StatsGrid from "@/components/StatsGrid";
 import TestimonialCard from "@/components/TestimonialCard";
-import { getServices, getTeam, getContactSettings, getTestimonials } from "@/lib/get-data";
+import { getServices, getTeam, getContactSettings, getTestimonials, getProducts } from "@/lib/get-data";
 import { homepageContent } from "@/data/homepage";
 import { offers } from "@/data/offers";
 
 export default async function HomePage() {
-  const [services, team, contact, testimonials] = await Promise.all([
+  const [services, team, contact, testimonials, products] = await Promise.all([
     getServices(),
     getTeam(),
     getContactSettings(),
     getTestimonials(),
+    getProducts(),
   ]);
 
   const featured = services.filter((s) => s.is_featured).slice(0, 3);
   const highlightServices = featured.length ? featured : services.slice(0, 3);
   const director = team.find((m) => m.slug === "archana-silwal-kadel");
+  const featuredProducts = products.filter((p) => p.is_featured).slice(0, 4);
 
   return (
     <>
@@ -95,6 +98,21 @@ export default async function HomePage() {
       </section>
 
       <BrandDivider />
+
+      {featuredProducts.length > 0 && (
+        <>
+          <BrandDivider />
+          <section className="mx-auto max-w-7xl px-6 py-16">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <SectionHeading eyebrow="Shop" title="Featured Products" />
+              <Link href="/products" className="btn-outline">Shop All Products</Link>
+            </div>
+            <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {featuredProducts.map((p) => <ProductCard key={p.id} product={p} />)}
+            </div>
+          </section>
+        </>
+      )}
 
       {/* CURRENT OFFERS */}
       <section className="mx-auto max-w-7xl px-6 py-16">

@@ -27,6 +27,7 @@ const staticPages: SearchResult[] = [
   { type: "Page", title: "Academy", href: "/academy" },
   { type: "Page", title: "Compare Courses", href: "/compare-courses" },
   { type: "Page", title: "Gallery", href: "/gallery" },
+  { type: "Page", title: "Shop Products", href: "/products" },
   { type: "Page", title: "Team", href: "/team" },
   { type: "Page", title: "Blog", href: "/blog" },
   { type: "Page", title: "Testimonials", href: "/testimonials" },

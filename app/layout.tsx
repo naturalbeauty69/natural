@@ -7,6 +7,7 @@ import FloatingActions from "@/components/nav/FloatingActions";
 import SplashScreen from "@/components/SplashScreen";
 import Analytics from "@/components/analytics/Analytics";
 import GlobalSchema from "@/components/schema/GlobalSchema";
+import { CartProvider } from "@/lib/cart-context";
 import { getContactSettings, getSeoSettings } from "@/lib/get-data";
 import { companyProfile } from "@/data/company";
 
@@ -60,13 +61,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`${fraunces.variable} ${sora.variable} ${plexMono.variable}`}>
       <body>
-        <GlobalSchema contact={contact} />
-        <SplashScreen />
-        <Header contact={contact} />
-        <main className="pb-20 md:pb-0">{children}</main>
-        <Footer contact={contact} />
-        <FloatingActions contact={contact} />
-        <Analytics />
+        <CartProvider>
+          <GlobalSchema contact={contact} />
+          <SplashScreen />
+          <Header contact={contact} />
+          <main className="pb-20 md:pb-0">{children}</main>
+          <Footer contact={contact} />
+          <FloatingActions contact={contact} />
+          <Analytics />
+        </CartProvider>
       </body>
     </html>
   );

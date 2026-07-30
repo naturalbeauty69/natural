@@ -539,3 +539,16 @@ Always let the foundation sit for a few minutes before deciding — first impres
 
 A well-matched foundation should be nearly invisible on the skin — the goal is even, natural-looking coverage, not a visible layer of product.', 'Makeup', 'Asmita Bista', '2026-08-15', array['Foundation Shade Matching','Choose Foundation Shade','Makeup Tips Nepal','Foundation Undertone','Makeup Matching Guide'], 100)
 on conflict (slug) do nothing;
+
+-- ---------- SAMPLE PRODUCTS ----------
+-- A few starter products so the Shop page isn't empty. Real catalog
+-- (250+ products) is loaded via the admin Products > Import CSV/Excel
+-- tool — see supabase/README or /admin/products for the template.
+insert into products (slug, name, category, price, discount_price, stock_quantity, suitable_for, ingredients, description, image_url, is_featured, display_order) values
+  ('casmara-algae-mask', 'Casmara Algae Peel-Off Mask', 'Casmara', 3500, null, 15, 'All skin types', 'Marine Algae Extract, Vitamin E', 'Deeply hydrating peel-off mask that revitalizes and firms the skin.', null, true, 1),
+  ('lotus-herbal-facewash', 'Lotus Herbal Face Wash', 'Lotus Professional', 450, 399, 40, 'Normal to oily skin', 'Neem, Tea Tree Oil', 'Gentle daily cleanser that clears impurities without drying the skin.', null, true, 2),
+  ('paese-matte-foundation', 'Paese Matte Foundation', 'Paese', 1800, null, 8, 'Combination to oily skin', 'Hyaluronic Acid, SPF 15', 'Long-wearing matte foundation with buildable medium-to-full coverage.', null, false, 3),
+  ('the-purest-vitamin-c-serum', 'The Purest Vitamin C Serum', 'The Purest', 2200, 1899, 20, 'Dull, uneven skin tone', 'Vitamin C, Hyaluronic Acid', 'Brightening serum that targets dullness and evens out skin tone.', null, true, 4),
+  ('farmona-hair-mask', 'Farmona Nourishing Hair Mask', 'Farmona', 1600, null, 0, 'Dry & damaged hair', 'Keratin, Argan Oil', 'Intensive repair mask for dry, damaged, or chemically treated hair.', null, false, 5),
+  ('homecare-cotton-pads', 'Homecare Cotton Pads (100pc)', 'Homecare product', 250, null, 60, 'All skin types', 'N/A', 'Soft, lint-free cotton pads for daily skincare routines.', null, false, 6)
+on conflict (slug) do nothing;

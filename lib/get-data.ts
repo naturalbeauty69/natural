@@ -8,6 +8,7 @@ import { courses as localCourses, Course } from "@/data/courses";
 import { blogPosts as localBlogPosts, BlogPost } from "@/data/blog";
 import { TeamMember, Service, ServiceCategory, ContactSettings } from "@/lib/types";
 import { GalleryImage } from "@/data/gallery";
+import { Product } from "@/lib/products-types";
 
 // ------------------------------------------------------------
 // Every page calls these functions instead of importing /data
@@ -135,6 +136,29 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
     seoKeywords: row.seo_keywords ?? [],
     publishedAt: row.published_at,
   }));
+}
+
+export async function getProducts(): Promise<Product[]> {
+  if (!isSupabaseConfigured || !supabase) return [];
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("is_active", true)
+    .order("display_order");
+  if (error || !data) return [];
+  return data as Product[];
+}
+
+export async function getProductBySlug(slug: string): Promise<Product | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .single();
+  if (error || !data) return null;
+  return data as Product;
 }
 
 export interface SeoSettings {
