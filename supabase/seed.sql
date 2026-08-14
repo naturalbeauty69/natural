@@ -26,15 +26,15 @@ on conflict (name) do nothing;
 insert into services (category_id, brand_id, slug, name, price_min, price_max, display_order)
 select c.id, b.id, s.slug, s.name, s.price_min, s.price_max, s.ord
 from (values
-  ('LOTUS', 'lotus-normal-facial', 'Normal Facial', 1800, null, 1),
-  ('LOTUS', 'lotus-advance-facial', 'Advance Facial', 3500, null, 2),
-  ('LOTUS', 'lotus-premium-facial', 'Premium Facial', 5500, null, 3),
-  ('CASMARA', 'casmara-normal-facial', 'Normal Facial', 3500, null, 4),
-  ('CASMARA', 'casmara-premium-facial', 'Premium Facial', 6000, null, 5),
-  ('O3+', 'o3-cleansing-facial', 'Cleansing Facial', 2500, null, 6),
-  ('O3+', 'o3-advance-facial', 'Advance Facial', 4500, null, 7),
-  ('O3+', 'o3-premium-facial', 'Premium Facial', 5500, null, 8),
-  ('EAR PASTING', 'ear-pasting', 'Ear Pasting', 3500, null, 9)
+  ('LOTUS', 'lotus-normal-facial', 'Normal Facial', 1800, null::numeric, 1),
+  ('LOTUS', 'lotus-advance-facial', 'Advance Facial', 3500, null::numeric, 2),
+  ('LOTUS', 'lotus-premium-facial', 'Premium Facial', 5500, null::numeric, 3),
+  ('CASMARA', 'casmara-normal-facial', 'Normal Facial', 3500, null::numeric, 4),
+  ('CASMARA', 'casmara-premium-facial', 'Premium Facial', 6000, null::numeric, 5),
+  ('O3+', 'o3-cleansing-facial', 'Cleansing Facial', 2500, null::numeric, 6),
+  ('O3+', 'o3-advance-facial', 'Advance Facial', 4500, null::numeric, 7),
+  ('O3+', 'o3-premium-facial', 'Premium Facial', 5500, null::numeric, 8),
+  ('EAR PASTING', 'ear-pasting', 'Ear Pasting', 3500, null::numeric, 9)
 ) as s(brand_name, slug, name, price_min, price_max, ord)
 join service_brands b on b.name = s.brand_name
 join service_categories c on c.slug = 'skin-treatments'
@@ -43,8 +43,8 @@ on conflict (slug) do nothing;
 -- ---------- THREADING ----------
 insert into services (category_id, slug, name, price_min, price_max, display_order)
 select c.id, s.slug, s.name, s.price_min, s.price_max, s.ord from (values
-  ('eyebrow-threading', 'Eyebrow Threading', 100, null, 1),
-  ('full-face-threading', 'Full Face Threading', 250, null, 2)
+  ('eyebrow-threading', 'Eyebrow Threading', 100, null::numeric, 1),
+  ('full-face-threading', 'Full Face Threading', 250, null::numeric, 2)
 ) as s(slug, name, price_min, price_max, ord)
 join service_categories c on c.slug = 'threading'
 on conflict (slug) do nothing;
@@ -88,9 +88,9 @@ on conflict (slug) do nothing;
 -- ---------- MANICURE & PEDICURE ----------
 insert into services (category_id, slug, name, price_min, price_max, display_order)
 select c.id, s.slug, s.name, s.price_min, s.price_max, s.ord from (values
-  ('normal-mani-pedi', 'Normal Manicure / Pedicure', 1500, null, 1),
-  ('advance-mani-pedi', 'Advance Manicure / Pedicure', 2500, null, 2),
-  ('deluxe-mani-pedi', 'Deluxe Manicure / Pedicure', 3500, null, 3)
+  ('normal-mani-pedi', 'Normal Manicure / Pedicure', 1500, null::numeric, 1),
+  ('advance-mani-pedi', 'Advance Manicure / Pedicure', 2500, null::numeric, 2),
+  ('deluxe-mani-pedi', 'Deluxe Manicure / Pedicure', 3500, null::numeric, 3)
 ) as s(slug, name, price_min, price_max, ord)
 join service_categories c on c.slug = 'manicure-pedicure'
 on conflict (slug) do nothing;
@@ -132,6 +132,87 @@ insert into courses (slug, name, category, level, duration, price, display_order
   ('nail-art-specialist-course', 'Nail Art Specialist Course', 'Nail Technology', 'Advanced', 'Short Term', 25000, 10),
   ('salon-management-course', 'Salon Management Course', 'Business Management', 'Professional', 'Short Term', 30000, 11)
 on conflict (slug) do nothing;
+
+
+-- ---------- GALLERY IMAGES ----------
+-- Mirrors data/gallery.ts (real uploaded photos, sorted by category).
+-- No unique constraint exists on gallery_images.url, so this uses a
+-- NOT EXISTS guard (rather than ON CONFLICT) to stay idempotent/safe
+-- to re-run without altering schema.sql.
+insert into gallery_images (url, category, caption, display_order)
+select v.url, v.category, v.caption, v.display_order
+from (values
+  ('/images/library/Clinic.webp', 'clinic', 'Clinic Interior', 1),
+  ('/images/library/Clinic 1.webp', 'clinic', 'Clinic Interior', 2),
+  ('/images/library/Clinic 2.webp', 'clinic', 'Clinic Interior', 3),
+  ('/images/library/Clinic 3.webp', 'clinic', 'Clinic Interior', 4),
+  ('/images/library/Clinic 4.webp', 'clinic', 'Clinic Interior', 5),
+  ('/images/library/hair-coloring.webp', 'hair', 'Hair Coloring', 6),
+  ('/images/library/hair-cutting-scissor.webp', 'hair', 'Precision Hair Cutting', 7),
+  ('/images/library/hair-styling-blowdry.webp', 'hair', 'Hair Styling & Blow-Dry', 8),
+  ('/images/library/Hair-cutting.webp', 'hair', 'Hair Cut', 9),
+  ('/images/library/Skin-and-facial-treatment.webp', 'skin', 'Skin & Facial Treatment', 10),
+  ('/images/library/hero-spa-facial.webp', 'skin', 'Spa Facial', 11),
+  ('/images/library/skin-analysis-machine.webp', 'skin', 'Advanced Skin Analysis', 12),
+  ('/images/library/ai-skin-analysis.webp', 'skin', 'Digital Skin Analysis', 13),
+  ('/images/library/Bridal.webp', 'bridal', 'Bridal Makeup', 14),
+  ('/images/library/Bridal1.webp', 'bridal', 'Bridal Makeup', 15),
+  ('/images/library/Bridal2.webp', 'bridal', 'Bridal Makeup', 16),
+  ('/images/library/Bridal3.webp', 'bridal', 'Bridal Makeup', 17),
+  ('/images/library/Bridal4.webp', 'bridal', 'Bridal Makeup', 18),
+  ('/images/library/Bridal5.webp', 'bridal', 'Bridal Makeup', 19),
+  ('/images/library/Birdal6.webp', 'bridal', 'Bridal Makeup', 20),
+  ('/images/library/Bridal7.webp', 'bridal', 'Bridal Makeup', 21),
+  ('/images/library/Birdal8.webp', 'bridal', 'Bridal Makeup', 22),
+  ('/images/library/Bridal9.webp', 'bridal', 'Bridal Makeup', 23),
+  ('/images/library/nepali-bridal-makeup.webp', 'bridal', 'Nepali Bridal Makeup', 24),
+  ('/images/library/hci-bridal-packages.webp', 'bridal', 'Bridal Package', 25),
+  ('/images/library/bridal-mehndi.webp', 'bridal', 'Bridal Mehndi', 26),
+  ('/images/library/Party-makeup.webp', 'bridal', 'Party Makeup', 27),
+  ('/images/library/Nail-services.webp', 'nails', 'Nail Services', 28),
+  ('/images/library/Nail-services1.webp', 'nails', 'Nail Services', 29),
+  ('/images/library/Nail-services2.webp', 'nails', 'Nail Services', 30),
+  ('/images/library/Nail-services3.webp', 'nails', 'Nail Services', 31),
+  ('/images/library/nail-art-rose-gold-marble.webp', 'nails', 'Rose Gold Marble Nail Art', 32),
+  ('/images/library/nail-extension-french.webp', 'nails', 'French Nail Extension', 33),
+  ('/images/library/nail-french-tip-almond.webp', 'nails', 'Almond French Tip', 34),
+  ('/images/library/nail-pink-marble-gold.webp', 'nails', 'Pink Marble Gold Nail Art', 35),
+  ('/images/library/eyebrow-threading.webp', 'threading', 'Eyebrow Threading', 36),
+  ('/images/library/body-waxing.webp', 'waxing', 'Body Waxing', 37),
+  ('/images/library/Academy4.webp', 'training', 'Academy Training', 38),
+  ('/images/library/Academy5.webp', 'training', 'Academy Training', 39),
+  ('/images/library/Academy7.webp', 'training', 'Academy Training', 40),
+  ('/images/library/Academy8.webp', 'training', 'Academy Training', 41),
+  ('/images/library/Academy9.webp', 'training', 'Academy Training', 42),
+  ('/images/library/Academy10.webp', 'training', 'Academy Training', 43),
+  ('/images/library/hairdressing-course.webp', 'training', 'Hairdressing Course', 44),
+  ('/images/library/professional-makeup-course.webp', 'training', 'Professional Makeup Course', 45),
+  ('/images/library/nail-extension-course.webp', 'training', 'Nail Extension Course', 46),
+  ('/images/library/skin-facial-course.webp', 'training', 'Skin & Facial Course', 47),
+  ('/images/library/free-demo-classes-poster.webp', 'training', 'Free Demo Classes', 48),
+  ('/images/library/Student.webp', 'students', 'Student at Work', 49),
+  ('/images/library/Student1.webp', 'students', 'Student at Work', 50),
+  ('/images/library/Student2.webp', 'students', 'Student at Work', 51),
+  ('/images/library/Student3.webp', 'students', 'Student at Work', 52),
+  ('/images/library/Before-after.webp', 'before_after', 'Before & After', 53),
+  ('/images/library/Before-after1.webp', 'before_after', 'Before & After', 54),
+  ('/images/library/Before-after2.webp', 'before_after', 'Before & After', 55),
+  ('/images/library/hair-rebonding-before-after.webp', 'before_after', 'Hair Rebonding — Before & After', 56),
+  ('/images/library/hair-smoothening-before-after.webp', 'before_after', 'Hair Smoothening — Before & After', 57),
+  ('/images/library/Certificate.webp', 'certificates', 'Certificate', 58),
+  ('/images/library/Certificate1.webp', 'certificates', 'Certificate', 59),
+  ('/images/library/Certificate2.webp', 'certificates', 'Certificate', 60),
+  ('/images/library/archana-award.webp', 'certificates', 'Recognition Award — Archana Silwal Kadel', 61),
+  ('/images/library/Event1.webp', 'events', 'Clinic Event', 62),
+  ('/images/library/Event4.webp', 'events', 'Clinic Event', 63),
+  ('/images/library/Event6.webp', 'events', 'Clinic Event', 64),
+  ('/images/library/Event7.webp', 'events', 'Clinic Event', 65),
+  ('/images/library/Event8.webp', 'events', 'Clinic Event', 66),
+  ('/images/library/Event9.webp', 'events', 'Clinic Event', 67),
+  ('/images/library/Event10.webp', 'events', 'Clinic Event', 68),
+  ('/images/library/Event11.webp', 'events', 'Clinic Event', 69)
+) as v(url, category, caption, display_order)
+where not exists (select 1 from gallery_images g where g.url = v.url);
 
 -- ---------- TESTIMONIALS ----------
 insert into testimonials (customer_name, location, rating, content) values

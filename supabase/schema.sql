@@ -373,6 +373,97 @@ create index if not exists idx_products_active on products(is_active);
 create index if not exists idx_products_featured on products(is_featured);
 create index if not exists idx_products_name on products using gin (to_tsvector('english', name));
 
+-- ------------------------------------------------------------
+-- AUTHORITATIVE SLUG GENERATION
+-- Postgres is the single source of truth for product slugs. This
+-- guarantees a valid, unique slug on every insert/update regardless
+-- of which client path wrote the row (manual admin form, CSV/Excel
+-- import, duplicate action, a future API, or a raw SQL insert) — no
+-- client code can "forget" to generate one, and none can collide.
+-- The TypeScript slugify() in lib/slug.ts is a preview-only mirror
+-- of the normalization rules below, used for live UI feedback; it
+-- never has the final say — this trigger does.
+-- ------------------------------------------------------------
+
+-- Pure normalization: lowercase, strip anything that isn't a-z/0-9,
+-- collapse runs of separators into a single hyphen, trim leading/
+-- trailing hyphens. Mirrors lib/slug.ts's slugify() exactly.
+create or replace function public.slugify_text(input text)
+returns text as $$
+  select trim(both '-' from regexp_replace(lower(coalesce(input, '')), '[^a-z0-9]+', '-', 'g'));
+$$ language sql immutable;
+
+-- Appends -2, -3, -4... (deterministic, not random) until the slug
+-- is unique among products, excluding the row being updated (if any).
+create or replace function public.generate_unique_product_slug(base_name text, exclude_id uuid default null)
+returns text as $$
+declare
+  base text;
+  candidate text;
+  suffix int := 1;
+begin
+  base := public.slugify_text(base_name);
+  if base = '' then
+    base := 'product';
+  end if;
+
+  candidate := base;
+  while exists (
+    select 1 from public.products
+    where slug = candidate
+    and (exclude_id is null or id <> exclude_id)
+  ) loop
+    suffix := suffix + 1;
+    candidate := base || '-' || suffix;
+  end loop;
+
+  return candidate;
+end;
+$$ language plpgsql;
+
+-- BEFORE INSERT OR UPDATE: fills in a missing slug, repairs an
+-- invalid one (doesn't match the normalized form), and re-resolves
+-- uniqueness if a caller-supplied slug collides with another row —
+-- silently, rather than failing the insert with a constraint error.
+create or replace function public.products_ensure_slug()
+returns trigger as $$
+declare
+  needs_regen boolean;
+begin
+  needs_regen := (
+    new.slug is null
+    or trim(new.slug) = ''
+    or new.slug <> public.slugify_text(new.slug) -- caller sent an unnormalized/invalid slug
+  );
+
+  if not needs_regen then
+    -- caller supplied a well-formed slug — only regenerate if it
+    -- collides with a different row, so hand-edited slugs from the
+    -- Admin Product Editor are preserved whenever possible.
+    needs_regen := exists (
+      select 1 from public.products
+      where slug = new.slug
+      and (tg_op = 'UPDATE' and id <> new.id or tg_op = 'INSERT')
+    );
+  end if;
+
+  if needs_regen then
+    new.slug := public.generate_unique_product_slug(
+      coalesce(nullif(trim(new.slug), ''), new.name),
+      case when tg_op = 'UPDATE' then new.id else null end
+    );
+  end if;
+
+  new.updated_at := now();
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists trg_products_ensure_slug on products;
+create trigger trg_products_ensure_slug
+  before insert or update on products
+  for each row execute procedure public.products_ensure_slug();
+
 alter table products enable row level security;
 create policy "public read active products" on products for select using (is_active = true);
 

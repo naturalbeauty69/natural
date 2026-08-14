@@ -1,11 +1,15 @@
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { PRODUCT_CATEGORIES } from "@/lib/products-types";
+import { slugify } from "@/lib/slug";
 
 export const IMPORT_COLUMNS = [
   "Product Name", "Category", "Price", "Discount Price", "Stock",
   "Suitable For", "Ingredients", "Description", "Image",
 ];
+
+// Optional columns a business user MAY include — never required.
+const OPTIONAL_COLUMNS = ["Featured", "Published"];
 
 export interface ImportRow {
   name: string;
@@ -17,29 +21,60 @@ export interface ImportRow {
   ingredients: string;
   description: string;
   image_filename: string;
+  is_featured: boolean;
+  is_active: boolean;
+  previewSlug: string; // UI preview only — the DB trigger has final authority
   errors: string[];
+  warnings: string[];
 }
 
-function slugify(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+function parseBoolLike(value: unknown, fallback: boolean): boolean {
+  if (value === undefined || value === null || value === "") return fallback;
+  const s = String(value).trim().toLowerCase();
+  if (["true", "yes", "1", "y"].includes(s)) return true;
+  if (["false", "no", "0", "n"].includes(s)) return false;
+  return fallback;
 }
 
 function normalizeRow(raw: Record<string, any>): ImportRow {
   const errors: string[] = [];
+  const warnings: string[] = [];
+
   const name = String(raw["Product Name"] ?? "").trim();
   const category = String(raw["Category"] ?? "").trim();
-  const price = Number(raw["Price"]);
+  const priceRaw = raw["Price"];
+  const price = Number(priceRaw);
   const discountRaw = raw["Discount Price"];
   const discount_price = discountRaw !== undefined && discountRaw !== "" ? Number(discountRaw) : null;
-  const stock_quantity = Number(raw["Stock"] ?? 0);
+  const stockRaw = raw["Stock"];
+  const stock_quantity = stockRaw === undefined || stockRaw === "" ? 0 : Number(stockRaw);
   const image_filename = String(raw["Image"] ?? "").trim();
 
+  // --- required-field validation (row is skipped on import if any error) ---
   if (!name) errors.push("Missing Product Name");
-  if (!PRODUCT_CATEGORIES.includes(category as any)) {
+  if (!category) {
+    errors.push("Missing Category");
+  } else if (!PRODUCT_CATEGORIES.includes(category as any)) {
     errors.push(`Category must be one of: ${PRODUCT_CATEGORIES.join(", ")}`);
   }
-  if (!price || isNaN(price)) errors.push("Price must be a number");
-  if (isNaN(stock_quantity)) errors.push("Stock must be a number");
+  if (priceRaw === undefined || priceRaw === "" || isNaN(price)) {
+    errors.push("Price must be a number");
+  } else if (price < 0) {
+    errors.push("Price cannot be negative");
+  }
+  if (isNaN(stock_quantity)) {
+    errors.push("Stock must be a number");
+  } else if (stock_quantity < 0) {
+    errors.push("Stock cannot be negative");
+  }
+  if (discount_price !== null && !isNaN(discount_price) && !isNaN(price) && discount_price >= price) {
+    warnings.push("Discount price is not lower than the regular price");
+  }
+
+  // --- warnings only (never block the import) ---
+  if (!image_filename) {
+    warnings.push("No image filename provided");
+  }
 
   return {
     name,
@@ -51,8 +86,16 @@ function normalizeRow(raw: Record<string, any>): ImportRow {
     ingredients: String(raw["Ingredients"] ?? "").trim(),
     description: String(raw["Description"] ?? "").trim(),
     image_filename,
+    is_featured: parseBoolLike(raw["Featured"], false),
+    is_active: parseBoolLike(raw["Published"], true),
+    previewSlug: name ? slugify(name) : "",
     errors,
+    warnings,
   };
+}
+
+function rowsAreBlank(raw: Record<string, any>): boolean {
+  return Object.values(raw).every((v) => v === undefined || v === null || String(v).trim() === "");
 }
 
 export function parseCsvFile(file: File): Promise<ImportRow[]> {
@@ -60,7 +103,10 @@ export function parseCsvFile(file: File): Promise<ImportRow[]> {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      complete: (results) => resolve((results.data as Record<string, any>[]).map(normalizeRow)),
+      complete: (results) => {
+        const rows = (results.data as Record<string, any>[]).filter((r) => !rowsAreBlank(r));
+        resolve(rows.map(normalizeRow));
+      },
       error: reject,
     });
   });
@@ -74,7 +120,7 @@ export function parseExcelFile(file: File): Promise<ImportRow[]> {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: "array" });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet) as Record<string, any>[];
+        const rows = (XLSX.utils.sheet_to_json(sheet) as Record<string, any>[]).filter((r) => !rowsAreBlank(r));
         resolve(rows.map(normalizeRow));
       } catch (err) {
         reject(err);
@@ -93,9 +139,13 @@ export function resolveImagePath(filename: string): string | null {
   return `/images/products/${filename}`;
 }
 
+// NOTE: no `slug` field here, deliberately. The `products_ensure_slug`
+// Postgres trigger (supabase/schema.sql) generates and uniquifies the
+// slug for every row on insert — this is the single authoritative
+// implementation. `previewSlug` above is shown in the import review
+// table purely so the admin can see roughly what URL to expect.
 export function rowToProductPayload(row: ImportRow, displayOrder: number) {
   return {
-    slug: slugify(row.name) + "-" + Math.random().toString(36).slice(2, 6),
     name: row.name,
     category: row.category,
     price: row.price,
@@ -105,8 +155,8 @@ export function rowToProductPayload(row: ImportRow, displayOrder: number) {
     ingredients: row.ingredients || null,
     description: row.description || null,
     image_url: resolveImagePath(row.image_filename),
-    is_active: true,
-    is_featured: false,
+    is_active: row.is_active,
+    is_featured: row.is_featured,
     display_order: displayOrder,
   };
 }
@@ -122,13 +172,15 @@ export function productsToCsv(products: Record<string, any>[]): string {
     "Ingredients": p.ingredients ?? "",
     "Description": p.description ?? "",
     "Image": p.image_url ? p.image_url.split("/").pop() : "",
+    "Featured": p.is_featured ? "Yes" : "No",
+    "Published": p.is_active ? "Yes" : "No",
   }));
   return Papa.unparse(rows);
 }
 
 export function downloadCsvTemplate() {
   const template = Papa.unparse([
-    Object.fromEntries(IMPORT_COLUMNS.map((c) => [c, ""])),
+    Object.fromEntries([...IMPORT_COLUMNS, ...OPTIONAL_COLUMNS].map((c) => [c, ""])),
   ]);
   const blob = new Blob([template], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);

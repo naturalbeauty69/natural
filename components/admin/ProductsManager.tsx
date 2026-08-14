@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase-admin/browser";
 import { Product, PRODUCT_CATEGORIES, getStockStatus } from "@/lib/products-types";
+import { slugify } from "@/lib/slug";
 import {
   parseCsvFile, parseExcelFile, rowToProductPayload, productsToCsv,
   downloadCsvTemplate, ImportRow,
@@ -15,12 +16,8 @@ import {
 
 const emptyForm = {
   name: "", category: PRODUCT_CATEGORIES[0] as string, price: "", discount_price: "",
-  stock_quantity: "", suitable_for: "", ingredients: "", description: "", image_url: "",
+  stock_quantity: "", suitable_for: "", ingredients: "", description: "", image_url: "", slug: "",
 };
-
-function slugify(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") + "-" + Math.random().toString(36).slice(2, 6);
-}
 
 const statusBadge: Record<string, string> = {
   in_stock: "bg-emerald-50 text-emerald-700",
@@ -45,6 +42,9 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
 
   const [importRows, setImportRows] = useState<ImportRow[] | null>(null);
   const [importing, setImporting] = useState(false);
+  const [importSummary, setImportSummary] = useState<{
+    imported: number; failed: number; skipped: number; missingImages: number; ms: number;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filtered = useMemo(() => {
@@ -94,7 +94,7 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
       name: p.name, category: p.category, price: p.price.toString(),
       discount_price: p.discount_price?.toString() ?? "", stock_quantity: p.stock_quantity.toString(),
       suitable_for: p.suitable_for ?? "", ingredients: p.ingredients ?? "",
-      description: p.description ?? "", image_url: p.image_url ?? "",
+      description: p.description ?? "", image_url: p.image_url ?? "", slug: p.slug,
     });
     setFormOpen(true);
   }
@@ -105,7 +105,7 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
     setErrorMessage("");
     const supabase = createClient();
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       name: form.name,
       category: form.category,
       price: Number(form.price),
@@ -116,15 +116,16 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
       description: form.description || null,
       image_url: form.image_url || null,
     };
+    if (form.slug.trim()) payload.slug = form.slug.trim();
 
     if (editingId) {
-      const { error } = await supabase.from("products").update(payload).eq("id", editingId);
+      const { data, error } = await supabase.from("products").update(payload).eq("id", editingId).select().single();
       if (error) { setErrorMessage(error.message); setSaving(false); return; }
-      setProducts((prev) => prev.map((p) => (p.id === editingId ? { ...p, ...payload } as Product : p)));
+      setProducts((prev) => prev.map((p) => (p.id === editingId ? (data as Product) : p)));
     } else {
       const { data, error } = await supabase
         .from("products")
-        .insert({ ...payload, slug: slugify(form.name), is_active: true, is_featured: false, display_order: products.length + 1, gallery_urls: [] })
+        .insert({ ...payload, is_active: true, is_featured: false, display_order: products.length + 1, gallery_urls: [] })
         .select()
         .single();
       if (error) { setErrorMessage(error.message); setSaving(false); return; }
@@ -151,9 +152,10 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
     const supabase = createClient();
     const rest = { ...p };
     delete (rest as Partial<Product>).id;
+    delete (rest as Partial<Product>).slug;
     const { data, error } = await supabase
       .from("products")
-      .insert({ ...rest, name: `${p.name} (Copy)`, slug: slugify(p.name), display_order: products.length + 1 })
+      .insert({ ...rest, name: `${p.name} (Copy)`, display_order: products.length + 1 })
       .select()
       .single();
     if (!error) setProducts((prev) => [...prev, data as Product]);
@@ -188,24 +190,31 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
     if (!file) return;
     const rows = file.name.endsWith(".csv") ? await parseCsvFile(file) : await parseExcelFile(file);
     setImportRows(rows);
+    setImportSummary(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function confirmImport() {
     if (!importRows) return;
     const validRows = importRows.filter((r) => r.errors.length === 0);
+    const skipped = importRows.length - validRows.length;
+    const missingImages = importRows.filter((r) => !r.image_filename).length;
     if (validRows.length === 0) return;
     setImporting(true);
+    const started = performance.now();
     const supabase = createClient();
 
     const payloads = validRows.map((row, i) => rowToProductPayload(row, products.length + i + 1));
     const { data, error } = await supabase.from("products").insert(payloads).select();
+    const ms = Math.round(performance.now() - started);
     setImporting(false);
 
     if (!error && data) {
       setProducts((prev) => [...prev, ...(data as Product[])]);
+      setImportSummary({ imported: data.length, failed: 0, skipped, missingImages, ms });
       setImportRows(null);
     } else if (error) {
+      setImportSummary({ imported: 0, failed: validRows.length, skipped, missingImages, ms });
       alert("Import failed: " + error.message);
     }
   }
@@ -221,8 +230,32 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
     URL.revokeObjectURL(url);
   }
 
+  const duplicateNamesInImport = importRows
+    ? new Set(
+        importRows
+          .map((r) => r.name.toLowerCase())
+          .filter((name, i, arr) => name && arr.indexOf(name) !== arr.lastIndexOf(name))
+      )
+    : new Set<string>();
+
   return (
     <div>
+      {importSummary && (
+        <div className="card mb-6 p-5 dark:border-cream/10 dark:bg-emerald-900">
+          <div className="flex items-center justify-between">
+            <p className="font-display text-base text-emerald-900 dark:text-cream">Import Summary</p>
+            <button onClick={() => setImportSummary(null)}><X className="h-4 w-4 text-ink-soft" /></button>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+            <div><p className="text-2xl font-display text-emerald-700">{importSummary.imported}</p><p className="text-xs text-ink-soft">Imported</p></div>
+            <div><p className="text-2xl font-display text-red-600">{importSummary.failed}</p><p className="text-xs text-ink-soft">Failed</p></div>
+            <div><p className="text-2xl font-display text-gold-600">{importSummary.skipped}</p><p className="text-xs text-ink-soft">Skipped (invalid)</p></div>
+            <div><p className="text-2xl font-display text-ink-soft">{importSummary.missingImages}</p><p className="text-xs text-ink-soft">Missing Images</p></div>
+          </div>
+          <p className="mt-3 text-xs text-ink-soft">Completed in {importSummary.ms}ms</p>
+        </div>
+      )}
+
       {importRows && (
         <div className="card mb-6 space-y-3 p-5 dark:border-cream/10 dark:bg-emerald-900">
           <div className="flex items-center justify-between">
@@ -234,23 +267,32 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
           <div className="max-h-64 overflow-y-auto rounded-lg border border-emerald-900/10">
             <table className="w-full text-xs">
               <thead className="bg-emerald-50 text-left dark:bg-emerald-900">
-                <tr><th className="px-2 py-1.5">Name</th><th className="px-2 py-1.5">Category</th><th className="px-2 py-1.5">Price</th><th className="px-2 py-1.5">Stock</th><th className="px-2 py-1.5">Status</th></tr>
+                <tr><th className="px-2 py-1.5">Name</th><th className="px-2 py-1.5">Slug (preview)</th><th className="px-2 py-1.5">Category</th><th className="px-2 py-1.5">Price</th><th className="px-2 py-1.5">Stock</th><th className="px-2 py-1.5">Notes</th></tr>
               </thead>
               <tbody>
-                {importRows.map((r, i) => (
-                  <tr key={i} className={`border-t border-emerald-900/5 ${r.errors.length ? "bg-red-50" : ""}`}>
-                    <td className="px-2 py-1.5">{r.name || "—"}</td>
-                    <td className="px-2 py-1.5">{r.category || "—"}</td>
-                    <td className="px-2 py-1.5">{r.price}</td>
-                    <td className="px-2 py-1.5">{r.stock_quantity}</td>
-                    <td className="px-2 py-1.5 text-red-700">{r.errors.join("; ")}</td>
-                  </tr>
-                ))}
+                {importRows.map((r, i) => {
+                  const isDupeName = r.name && duplicateNamesInImport.has(r.name.toLowerCase());
+                  return (
+                    <tr key={i} className={`border-t border-emerald-900/5 ${r.errors.length ? "bg-red-50" : isDupeName ? "bg-gold-100/40" : ""}`}>
+                      <td className="px-2 py-1.5">{r.name || "—"}</td>
+                      <td className="px-2 py-1.5 font-mono text-ink-soft">{r.previewSlug || "—"}</td>
+                      <td className="px-2 py-1.5">{r.category || "—"}</td>
+                      <td className="px-2 py-1.5">{r.price}</td>
+                      <td className="px-2 py-1.5">{r.stock_quantity}</td>
+                      <td className="px-2 py-1.5">
+                        {r.errors.length > 0 && <span className="text-red-700">{r.errors.join("; ")}</span>}
+                        {r.errors.length === 0 && r.warnings.length > 0 && <span className="text-gold-700">{r.warnings.join("; ")}</span>}
+                        {isDupeName && <span className="text-gold-700"> · Duplicate name in this file</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
           <p className="text-xs text-ink-soft">
             Image filenames map to <code>/images/products/&lt;filename&gt;</code> — upload that folder to your repo&apos;s <code>public/images/products/</code> alongside this import.
+            Slugs are previewed here for reference only — the database assigns and guarantees the final unique slug automatically.
           </p>
           <button onClick={confirmImport} disabled={importing} className="btn-primary text-sm">
             {importing ? "Importing…" : `Import ${importRows.filter((r) => r.errors.length === 0).length} Products`}
@@ -307,6 +349,18 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
             <input type="number" placeholder="Discount Price (optional)" value={form.discount_price} onChange={(e) => setForm({ ...form, discount_price: e.target.value })} className="rounded-lg border border-emerald-900/15 bg-cream px-3 py-2 text-sm" />
             <input required type="number" placeholder="Stock Quantity" value={form.stock_quantity} onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })} className="rounded-lg border border-emerald-900/15 bg-cream px-3 py-2 text-sm" />
             <input placeholder="Suitable For" value={form.suitable_for} onChange={(e) => setForm({ ...form, suitable_for: e.target.value })} className="rounded-lg border border-emerald-900/15 bg-cream px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <input
+              placeholder="Slug (optional — auto-generated from name if left blank)"
+              value={form.slug}
+              onChange={(e) => setForm({ ...form, slug: e.target.value })}
+              className="w-full rounded-lg border border-emerald-900/15 bg-cream px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-xs text-ink-soft">
+              URL preview: /products/<span className="font-mono">{form.slug.trim() ? slugify(form.slug) : (form.name ? slugify(form.name) : "…")}</span>
+              {" "}— the database guarantees this is unique, adjusting it automatically if it collides with an existing product.
+            </p>
           </div>
           <input placeholder="Image URL" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="w-full rounded-lg border border-emerald-900/15 bg-cream px-3 py-2 text-sm" />
           <input placeholder="Ingredients" value={form.ingredients} onChange={(e) => setForm({ ...form, ingredients: e.target.value })} className="w-full rounded-lg border border-emerald-900/15 bg-cream px-3 py-2 text-sm" />
