@@ -10,6 +10,7 @@ type Resource = {
   title: string;
   description: string | null;
   resource_type: string;
+  file_name: string | null;
   course_id: string | null;
   google_drive_url: string | null;
   storage_path: string | null;
