@@ -1,16 +1,22 @@
-FINAL Academy build-fix patch
+FINAL MIDDLEWARE FIX
 
-Replace ONLY these two files in the existing GitHub project:
-1. app/academy/page.tsx
-2. components/admin/AcademyResourcesManager.tsx
+Replace ONLY:
+middleware.ts
 
-Do NOT run SQL for this patch.
-Do NOT replace middleware.ts with this patch.
-Do NOT replace the whole website.
+This file restores the known-good middleware implementation:
+- updateSession(request) returns { response, user, supabase }
+- middleware returns response
+- no undefined `response` variable
+- no dashboard SQL/CPU changes
 
-Fixes:
-- Uses Next.js Link for internal Academy navigation.
-- Removes unused Upload icon import.
-- Adds file_name to the Resource TypeScript type.
+DO NOT run Supabase SQL for this patch.
 
-Then commit and push to GitHub and let Cloudflare rebuild.
+After replacing the file:
+git add middleware.ts
+git commit -m "Fix middleware response build error"
+git push
+
+Then wait for Cloudflare to build the new commit.
+
+IMPORTANT:
+Make sure GitHub's middleware.ts is the same as this patch before pushing. Cloudflare must build the commit containing this file.
