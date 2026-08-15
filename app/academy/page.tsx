@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import SectionHeading from "@/components/SectionHeading";
 import Breadcrumbs from "@/components/nav/Breadcrumbs";
 import BrandDivider from "@/components/BrandDivider";
@@ -47,9 +48,9 @@ export default async function AcademyPage() {
       <BrandDivider className="mt-14" />
 
       <div className="mb-8 flex flex-wrap justify-center gap-3">
-        <a href="/academy/apply" className="btn-gold">Apply online</a>
-        <a href="/compare-courses" className="btn-outline">Compare courses</a>
-        <a href="/academy/resources" className="btn-outline">Student resources</a>
+        <Link href="/academy/apply" className="btn-gold">Apply online</Link>
+        <Link href="/compare-courses" className="btn-outline">Compare courses</Link>
+        <Link href="/academy/resources" className="btn-outline">Student resources</Link>
       </div>
 
       <div className="mt-4 space-y-12">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, X, UserPlus, Upload } from "lucide-react";
+import { Plus, Trash2, X, UserPlus } from "lucide-react";
 import { createClient } from "@/lib/supabase-admin/browser";
 
 type Course = { id: string; name: string };
