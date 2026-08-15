@@ -1,22 +1,19 @@
-FINAL MIDDLEWARE FIX
+ADMIN DASHBOARD CPU FIX - FINAL
 
 Replace ONLY:
-middleware.ts
+app/admin/dashboard/page.tsx
 
-This file restores the known-good middleware implementation:
-- updateSession(request) returns { response, user, supabase }
-- middleware returns response
-- no undefined `response` variable
-- no dashboard SQL/CPU changes
+Do not modify:
+- Supabase SQL
+- middleware.ts
+- app/admin/layout.tsx
+- other website files
 
-DO NOT run Supabase SQL for this patch.
-
+The dashboard statistics now load in the browser instead of during the Cloudflare Worker request.
 After replacing the file:
-git add middleware.ts
-git commit -m "Fix middleware response build error"
-git push
+1. commit
+2. push to GitHub
+3. let Cloudflare build
+4. test /admin/dashboard
 
-Then wait for Cloudflare to build the new commit.
-
-IMPORTANT:
-Make sure GitHub's middleware.ts is the same as this patch before pushing. Cloudflare must build the commit containing this file.
+Do not run any SQL for this patch.
