@@ -1,9 +1,46 @@
-import { CalendarCheck, Clock, GraduationCap, Users, UserCheck, Briefcase, Star, TrendingUp } from "lucide-react";
-import { createClient } from "@/lib/supabase-admin/server";
+"use client";
 
-async function getStats() {
-  const supabase = await createClient();
+import { useEffect, useState } from "react";
+import {
+  CalendarCheck,
+  Clock,
+  GraduationCap,
+  Users,
+  UserCheck,
+  Briefcase,
+  Star,
+  TrendingUp,
+} from "lucide-react";
+import { createClient } from "@/lib/supabase-admin/browser";
+
+type Stats = {
+  todayAppointments: number;
+  pendingAppointments: number;
+  runningBatches: number;
+  upcomingBatches: number;
+  totalStudents: number;
+  totalStaff: number;
+  newEnrollments30d: number;
+  reviews: number;
+};
+
+const EMPTY_STATS: Stats = {
+  todayAppointments: 0,
+  pendingAppointments: 0,
+  runningBatches: 0,
+  upcomingBatches: 0,
+  totalStudents: 0,
+  totalStaff: 0,
+  newEnrollments30d: 0,
+  reviews: 0,
+};
+
+async function getStats(): Promise<Stats> {
+  const supabase = createClient();
   const today = new Date().toISOString().split("T")[0];
+  const thirtyDaysAgo = new Date(
+    Date.now() - 30 * 24 * 60 * 60 * 1000
+  ).toISOString();
 
   const [
     todayAppointments,
@@ -15,15 +52,38 @@ async function getStats() {
     newEnrollments30d,
     reviews,
   ] = await Promise.all([
-    supabase.from("appointments").select("id", { count: "exact", head: true }).eq("appointment_date", today),
-    supabase.from("appointments").select("id", { count: "exact", head: true }).eq("status", "pending"),
-    supabase.from("course_batches").select("id", { count: "exact", head: true }).eq("status", "running"),
-    supabase.from("course_batches").select("id", { count: "exact", head: true }).eq("status", "upcoming"),
-    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "student"),
-    supabase.from("staff_records").select("id", { count: "exact", head: true }).eq("is_active", true),
-    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "student")
-      .gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
-    supabase.from("testimonials").select("id", { count: "exact", head: true }),
+    supabase
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("appointment_date", today),
+    supabase
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+    supabase
+      .from("course_batches")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "running"),
+    supabase
+      .from("course_batches")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "upcoming"),
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "student"),
+    supabase
+      .from("staff_records")
+      .select("id", { count: "exact", head: true })
+      .eq("is_active", true),
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "student")
+      .gte("created_at", thirtyDaysAgo),
+    supabase
+      .from("testimonials")
+      .select("id", { count: "exact", head: true }),
   ]);
 
   return {
@@ -38,8 +98,25 @@ async function getStats() {
   };
 }
 
-export default async function AdminDashboardPage() {
-  const stats = await getStats();
+export default function AdminDashboardPage() {
+  const [stats, setStats] = useState<Stats>(EMPTY_STATS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getStats()
+      .then((nextStats) => {
+        if (!cancelled) setStats(nextStats);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const cards = [
     { label: "Today's Appointments", value: stats.todayAppointments, icon: CalendarCheck },
@@ -65,7 +142,9 @@ export default async function AdminDashboardPage() {
           return (
             <div key={card.label} className="card p-5 dark:border-cream/10 dark:bg-emerald-900">
               <Icon className="h-5 w-5 text-gold-500" />
-              <p className="mt-3 font-display text-2xl text-emerald-900 dark:text-cream">{card.value}</p>
+              <p className="mt-3 font-display text-2xl text-emerald-900 dark:text-cream">
+                {loading ? "…" : card.value}
+              </p>
               <p className="mt-1 text-xs text-ink-soft dark:text-cream/60">{card.label}</p>
             </div>
           );

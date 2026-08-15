@@ -1,15 +1,21 @@
-ACADEMY SAFE PATCH v3 - FINAL
+Admin Dashboard CPU-limit fix
 
-Replace ONLY these two files in the existing GitHub project:
+Replace ONLY these files in the existing project:
+- app/admin/dashboard/page.tsx
+- app/admin/layout.tsx
+- middleware.ts
 
-1. app/academy/page.tsx
-2. components/admin/AcademyResourcesManager.tsx
+What this fixes:
+1. Moves the 8 dashboard count queries from the Cloudflare Worker server render to the authenticated browser.
+2. Avoids repeating Supabase auth/profile queries in app/admin/layout.tsx after middleware has already verified the session.
+3. Keeps authorization in middleware.
+4. Does not modify Supabase schema/data.
 
-Do NOT run SQL for this frontend patch.
-Do NOT replace the Supabase database.
-Do NOT delete existing data.
+Do NOT run any SQL for this patch.
+Do NOT replace the rest of the website.
 
-Fixes included:
-- Uses Next.js Link for Academy internal navigation.
-- Removes unused Upload icon import.
-- Adds file_name to the local Resource type so TypeScript matches the academy_resources fields used by the component.
+After replacing the files:
+npm install
+npm run build
+
+Then commit and push to GitHub and test /admin/dashboard.
