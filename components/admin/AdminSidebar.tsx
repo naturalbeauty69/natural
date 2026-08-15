@@ -26,6 +26,8 @@ const sections: { heading: string; links: SidebarLink[] }[] = [
       { label: "Appointments", href: "/admin/appointments", icon: CalendarCheck },
       { label: "Students", href: "/admin/students", icon: GraduationCap },
       { label: "Courses", href: "/admin/courses", icon: GraduationCap },
+      { label: "Applications", href: "/admin/course-applications", icon: FileText },
+      { label: "Academy Resources", href: "/admin/academy-resources", icon: FileText },
       { label: "Batches", href: "/admin/batches", icon: Users },
       { label: "Trainers", href: "/admin/trainers", icon: UserCog },
       { label: "Team", href: "/admin/team", icon: UsersRound },

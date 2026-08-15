@@ -136,3 +136,35 @@ say the word and I'll switch it over.
 
 This keeps the architecture, schema, and design system from this phase unchanged, per
 the project spec.
+
+
+## Academy Phase 2 — resources, private files and online applications
+
+This build adds:
+
+- `/academy/[course-slug]` course detail pages with syllabus, eligibility, certification and career outcomes.
+- `/academy/apply` online course applications with a course selector.
+- `/academy/resources` authenticated resource library.
+- Student dashboard resource library and application status.
+- Admin **Academy Resources** manager for Google Drive/storage links, notices, images, syllabus files, visibility and download-button control.
+- Admin **Course Applications** workflow for reviewing and approving/rejecting applicants.
+- Course editor support for detailed syllabus/curriculum (`Module | Topic 1, Topic 2`), eligibility, certification and career opportunities.
+- RLS rules for public, enrolled students, explicitly approved users and staff-only resources.
+
+### Database setup
+
+For an existing Supabase database, run:
+
+`supabase/migrations/20260814_academy_resources_and_applications.sql`
+
+Do **not** rerun the old `schema.sql` against an already-populated database just to install this phase. The migration is designed for an existing project and uses idempotent table/index/policy/trigger statements.
+
+For Google Drive resources, paste the share URL into **Admin → Academy Resources**. The app controls who can see the resource and whether the app displays an Open/Download button. Google Drive itself must still have the correct sharing permission; hiding the button cannot revoke a previously shared Google Drive file.
+
+### Course syllabus format
+
+In **Admin → Courses**, enter one module per line:
+
+`Module name | Topic 1, Topic 2, Topic 3`
+
+When the academy Word syllabus is supplied, convert its actual headings/topics into this field rather than inventing curriculum content.

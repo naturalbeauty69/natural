@@ -46,6 +46,12 @@ export default async function AcademyPage() {
 
       <BrandDivider className="mt-14" />
 
+      <div className="mb-8 flex flex-wrap justify-center gap-3">
+        <a href="/academy/apply" className="btn-gold">Apply online</a>
+        <a href="/compare-courses" className="btn-outline">Compare courses</a>
+        <a href="/academy/resources" className="btn-outline">Student resources</a>
+      </div>
+
       <div className="mt-4 space-y-12">
         {courseCategories.map((category) => {
           const categoryCourses = courses.filter((c) => c.category === category);
