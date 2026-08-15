@@ -1,19 +1,10 @@
-ADMIN DASHBOARD CPU FIX - FINAL
+ACADEMY ADMIN LOGIN FIX
 
-Replace ONLY:
-app/admin/dashboard/page.tsx
+Replace only:
+  middleware.ts
 
-Do not modify:
-- Supabase SQL
-- middleware.ts
-- app/admin/layout.tsx
-- other website files
+Reason:
+The Admin layout expects x-admin-role, x-admin-user-email, and x-admin-active request headers, but the previous middleware never set them. After successful authentication, /admin/dashboard reached the layout as guest/inactive and redirected back to /login.
 
-The dashboard statistics now load in the browser instead of during the Cloudflare Worker request.
-After replacing the file:
-1. commit
-2. push to GitHub
-3. let Cloudflare build
-4. test /admin/dashboard
-
-Do not run any SQL for this patch.
+No Supabase SQL changes are required.
+After replacing middleware.ts, commit and deploy. Verify admin login before making any other changes.
