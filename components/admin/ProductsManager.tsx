@@ -9,6 +9,8 @@ import {
 import { createClient } from "@/lib/supabase-admin/browser";
 import { Product, PRODUCT_CATEGORIES, getStockStatus } from "@/lib/products-types";
 import { slugify } from "@/lib/slug";
+import { indexImageZip, extractZipImage, ZipImageIndex } from "@/lib/admin/image-zip";
+import { uploadProductImage, normalizeProductImageFilename, isLegacyProductImagePath, isAbsoluteImageUrl } from "@/lib/admin/product-image-storage";
 import {
   parseCsvFile, parseExcelFile, rowToProductPayload, productsToCsv,
   downloadCsvTemplate, ImportRow,
@@ -46,6 +48,10 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
     imported: number; failed: number; skipped: number; missingImages: number; ms: number;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageZipInputRef = useRef<HTMLInputElement>(null);
+  const [imageZip, setImageZip] = useState<ZipImageIndex | null>(null);
+  const [imageZipLoading, setImageZipLoading] = useState(false);
+  const [imageZipMessage, setImageZipMessage] = useState("");
 
   const filtered = useMemo(() => {
     let list = products.filter((p) => {
@@ -188,34 +194,152 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const rows = file.name.endsWith(".csv") ? await parseCsvFile(file) : await parseExcelFile(file);
-    setImportRows(rows);
-    setImportSummary(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    try {
+      const rows = file.name.toLowerCase().endsWith(".csv") ? await parseCsvFile(file) : await parseExcelFile(file);
+      setImportRows(rows);
+      setImportSummary(null);
+      setImageZipMessage("");
+    } catch (error) {
+      alert(`Could not read the product file: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleImageZipSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageZipLoading(true);
+    setImageZipMessage("");
+    try {
+      const index = await indexImageZip(file);
+      setImageZip(index);
+      setImageZipMessage(
+        `${index.entries.size} image${index.entries.size === 1 ? "" : "s"} indexed from ${file.name}.`
+      );
+    } catch (error) {
+      setImageZip(null);
+      setImageZipMessage(`Could not read image ZIP: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setImageZipLoading(false);
+      if (imageZipInputRef.current) imageZipInputRef.current.value = "";
+    }
+  }
+
+  async function prepareStorageImages(rows: ImportRow[], supabase: ReturnType<typeof createClient>) {
+    if (!imageZip) return new Map<string, string>();
+
+    const needed = new Map<string, string>();
+    rows.forEach((row) => {
+      const filename = normalizeProductImageFilename(row.image_filename);
+      if (
+        filename &&
+        !isLegacyProductImagePath(row.image_filename) &&
+        !isAbsoluteImageUrl(row.image_filename)
+      ) {
+        needed.set(filename, row.image_filename);
+      }
+    });
+
+    const resolved = new Map<string, string>();
+    const entries = Array.from(needed.entries());
+    let failedUploads = 0;
+
+    for (let i = 0; i < entries.length; i += 4) {
+      const batch = entries.slice(i, i + 4);
+      await Promise.all(
+        batch.map(async ([normalizedName, originalName]) => {
+          const entry = imageZip.entries.get(normalizedName);
+          if (!entry) return;
+
+          try {
+            const imageFile = await extractZipImage(imageZip, entry);
+            const uploaded = await uploadProductImage(supabase, imageFile);
+            resolved.set(normalizedName, uploaded.url);
+          } catch {
+            failedUploads += 1;
+          }
+        })
+      );
+    }
+
+    return { resolved, missing: Array.from(needed.keys()).filter((name) => !resolved.has(name)), failedUploads };
   }
 
   async function confirmImport() {
     if (!importRows) return;
     const validRows = importRows.filter((r) => r.errors.length === 0);
     const skipped = importRows.length - validRows.length;
-    const missingImages = importRows.filter((r) => !r.image_filename).length;
+    const missingCsvImages = importRows.filter((r) => !r.image_filename).length;
     if (validRows.length === 0) return;
+
     setImporting(true);
     const started = performance.now();
     const supabase = createClient();
 
-    const payloads = validRows.map((row, i) => rowToProductPayload(row, products.length + i + 1));
-    const { data, error } = await supabase.from("products").insert(payloads).select();
-    const ms = Math.round(performance.now() - started);
-    setImporting(false);
+    try {
+      const storageResult = imageZip
+        ? await prepareStorageImages(validRows, supabase)
+        : new Map<string, string>();
 
-    if (!error && data) {
+      const uploadedByName = storageResult instanceof Map ? storageResult : storageResult.resolved;
+      const storageMissing = storageResult instanceof Map ? [] : storageResult.missing;
+      const uploadFailures = storageResult instanceof Map ? 0 : storageResult.failedUploads;
+
+      const payloads = validRows.map((row, i) => {
+        const normalized = normalizeProductImageFilename(row.image_filename);
+        const storageUrl = normalized ? uploadedByName.get(normalized) : undefined;
+
+        let imageOverride: string | null | undefined;
+        if (isLegacyProductImagePath(row.image_filename) || isAbsoluteImageUrl(row.image_filename)) {
+          // Preserve existing GitHub/public paths and external URLs exactly as supplied.
+          imageOverride = row.image_filename;
+        } else if (imageZip) {
+          // When the user selected an images ZIP, a bare filename is expected to be uploaded
+          // to Supabase Storage. If it is missing/failed, import the product without a
+          // misleading legacy URL; the missing image is already reflected in the summary.
+          imageOverride = storageUrl ?? null;
+        }
+
+        return rowToProductPayload(row, products.length + i + 1, imageOverride);
+      });
+
+      const { data, error } = await supabase.from("products").insert(payloads).select();
+      const ms = Math.round(performance.now() - started);
+
+      if (error || !data) {
+        setImportSummary({
+          imported: 0,
+          failed: validRows.length,
+          skipped,
+          missingImages: missingCsvImages + storageMissing.length + uploadFailures,
+          ms,
+        });
+        alert("Import failed: " + (error?.message || "No products were returned."));
+        return;
+      }
+
       setProducts((prev) => [...prev, ...(data as Product[])]);
-      setImportSummary({ imported: data.length, failed: 0, skipped, missingImages, ms });
+      setImportSummary({
+        imported: data.length,
+        failed: 0,
+        skipped,
+        missingImages: missingCsvImages + storageMissing.length + uploadFailures,
+        ms,
+      });
       setImportRows(null);
-    } else if (error) {
-      setImportSummary({ imported: 0, failed: validRows.length, skipped, missingImages, ms });
-      alert("Import failed: " + error.message);
+    } catch (error) {
+      const ms = Math.round(performance.now() - started);
+      setImportSummary({
+        imported: 0,
+        failed: validRows.length,
+        skipped,
+        missingImages: missingCsvImages,
+        ms,
+      });
+      alert(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -290,11 +414,16 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-ink-soft">
-            Image filenames map to <code>/images/products/&lt;filename&gt;</code> — upload that folder to your repo&apos;s <code>public/images/products/</code> alongside this import.
-            Slugs are previewed here for reference only — the database assigns and guarantees the final unique slug automatically.
-          </p>
-          <button onClick={confirmImport} disabled={importing} className="btn-primary text-sm">
+          <div className="rounded-lg bg-emerald-50/60 p-3 text-xs text-ink-soft dark:bg-emerald-950/30">
+            <p>
+              Existing product images that already use <code>/images/products/&lt;filename&gt;</code> remain unchanged.
+              For new products, choose an optional <strong>images ZIP</strong> below to upload those images directly to
+              Supabase Storage. Missing images never stop the import.
+            </p>
+            {imageZipMessage && <p className="mt-1 text-emerald-700">{imageZipMessage}</p>}
+            <p className="mt-1">Slugs are previewed only — the database assigns and guarantees the final unique slug.</p>
+          </div>
+          <button onClick={confirmImport} disabled={importing || imageZipLoading} className="btn-primary text-sm">
             {importing ? "Importing…" : `Import ${importRows.filter((r) => r.errors.length === 0).length} Products`}
           </button>
         </div>
@@ -320,6 +449,11 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
           <button onClick={downloadCsvTemplate} className="btn-outline flex items-center gap-1.5 text-xs"><FileSpreadsheet className="h-3.5 w-3.5" /> Template</button>
           <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileSelect} className="hidden" id="import-file" />
           <label htmlFor="import-file" className="btn-outline flex cursor-pointer items-center gap-1.5 text-xs"><Upload className="h-3.5 w-3.5" /> Import CSV/Excel</label>
+          <input ref={imageZipInputRef} type="file" accept=".zip,application/zip" onChange={handleImageZipSelect} className="hidden" id="import-images-zip" />
+          <label htmlFor="import-images-zip" className={`btn-outline flex cursor-pointer items-center gap-1.5 text-xs ${imageZipLoading ? "pointer-events-none opacity-60" : ""}`}>
+            <Upload className="h-3.5 w-3.5" /> {imageZipLoading ? "Reading Images…" : "Choose Images ZIP"}
+          </label>
+          {imageZip && <button onClick={() => { setImageZip(null); setImageZipMessage(""); }} className="btn-outline text-xs">Clear ZIP</button>}
           <button onClick={exportCsv} className="btn-outline flex items-center gap-1.5 text-xs"><Download className="h-3.5 w-3.5" /> Export</button>
           <button onClick={startAdd} className="btn-primary flex items-center gap-1.5 text-xs"><Plus className="h-3.5 w-3.5" /> Add Product</button>
         </div>

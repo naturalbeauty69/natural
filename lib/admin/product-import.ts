@@ -131,9 +131,9 @@ export function parseExcelFile(file: File): Promise<ImportRow[]> {
   });
 }
 
-// Image filenames from the spreadsheet map to /images/products/<filename>
-// in the repo's public folder — admin uploads that folder alongside the
-// import (same convention as the Gallery/Team "paste a path" model).
+// Bare image filenames preserve the legacy GitHub/public-folder convention when no
+// Storage ZIP is supplied. The Product Manager can override this with a Supabase
+// Storage URL for new imports without touching existing image URLs.
 export function resolveImagePath(filename: string): string | null {
   if (!filename) return null;
   return `/images/products/${filename}`;
@@ -144,7 +144,7 @@ export function resolveImagePath(filename: string): string | null {
 // slug for every row on insert — this is the single authoritative
 // implementation. `previewSlug` above is shown in the import review
 // table purely so the admin can see roughly what URL to expect.
-export function rowToProductPayload(row: ImportRow, displayOrder: number) {
+export function rowToProductPayload(row: ImportRow, displayOrder: number, imageUrlOverride?: string | null) {
   return {
     name: row.name,
     category: row.category,
@@ -154,7 +154,7 @@ export function rowToProductPayload(row: ImportRow, displayOrder: number) {
     suitable_for: row.suitable_for || null,
     ingredients: row.ingredients || null,
     description: row.description || null,
-    image_url: resolveImagePath(row.image_filename),
+    image_url: imageUrlOverride !== undefined ? imageUrlOverride : resolveImagePath(row.image_filename),
     is_active: row.is_active,
     is_featured: row.is_featured,
     display_order: displayOrder,

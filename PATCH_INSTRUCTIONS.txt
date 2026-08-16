@@ -1,10 +1,32 @@
-ACADEMY ADMIN LOGIN FIX
+# Hybrid Product Image Storage Patch
 
-Replace only:
-  middleware.ts
+This patch adds a SAFE hybrid image workflow.
 
-Reason:
-The Admin layout expects x-admin-role, x-admin-user-email, and x-admin-active request headers, but the previous middleware never set them. After successful authentication, /admin/dashboard reached the layout as guest/inactive and redirected back to /login.
+EXISTING PRODUCTS:
+- Existing `/images/products/...` paths are left unchanged.
+- Existing GitHub/Cloudflare product images are not moved or deleted.
 
-No Supabase SQL changes are required.
-After replacing middleware.ts, commit and deploy. Verify admin login before making any other changes.
+NEW IMPORTS:
+- In Admin > Products, select the CSV/Excel file.
+- Optionally choose an `images.zip`.
+- Bare filenames from the CSV are uploaded directly from the browser to the Supabase `products` Storage bucket.
+- The resulting public Supabase URL is stored in `products.image_url`.
+- If an image is missing or upload fails, the product import continues and the product is stored without a misleading legacy image URL.
+- Absolute URLs and existing `/images/products/...` paths are preserved unchanged.
+- New image uploads happen directly from the browser to Supabase Storage, not through the Cloudflare Worker.
+
+IMPORTANT:
+1. Run `PRODUCT_IMAGE_STORAGE_MIGRATION.sql` once in the existing Supabase project.
+2. The migration only creates/updates the public `products` Storage bucket and staff upload/update/delete policies. It does NOT modify the `products` table or existing product rows.
+3. Then replace only the listed source files in the existing GitHub project.
+4. Do NOT rerun `schema.sql`.
+5. Do NOT migrate or delete your existing GitHub images.
+
+CSV example:
+Product Name,Category,Price,Image
+New Product,Makeup,2500,new-product.jpg
+
+ZIP:
+new-product.jpg
+
+The file name is matched case-insensitively by base filename.
