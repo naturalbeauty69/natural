@@ -52,6 +52,7 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
   const [imageZip, setImageZip] = useState<ZipImageIndex | null>(null);
   const [imageZipLoading, setImageZipLoading] = useState(false);
   const [imageZipMessage, setImageZipMessage] = useState("");
+  const [imageZipErrors, setImageZipErrors] = useState<string[]>([]);
 
   const filtered = useMemo(() => {
     let list = products.filter((p) => {
@@ -211,23 +212,49 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
     if (!file) return;
     setImageZipLoading(true);
     setImageZipMessage("");
+    setImageZipErrors([]);
+
     try {
+      if (!/\.zip$/i.test(file.name)) {
+        throw new Error("Please choose a .zip file containing your product images.");
+      }
+
       const index = await indexImageZip(file);
+      if (index.entries.size === 0) {
+        throw new Error("The ZIP was read successfully but contains no supported image files (JPG, PNG, WEBP, GIF, AVIF, BMP, or SVG).");
+      }
+
       setImageZip(index);
+      const samples = Array.from(index.entries.values())
+        .slice(0, 5)
+        .map((entry) => entry.fileName)
+        .join(", ");
+
       setImageZipMessage(
-        `${index.entries.size} image${index.entries.size === 1 ? "" : "s"} indexed from ${file.name}.`
+        `${index.entries.size} image${index.entries.size === 1 ? "" : "s"} found in ${file.name}.` +
+        (samples ? ` Examples: ${samples}${index.entries.size > 5 ? "…" : ""}` : "")
       );
     } catch (error) {
       setImageZip(null);
-      setImageZipMessage(`Could not read image ZIP: ${error instanceof Error ? error.message : String(error)}`);
+      setImageZipErrors([error instanceof Error ? error.message : String(error)]);
+      setImageZipMessage("");
     } finally {
       setImageZipLoading(false);
       if (imageZipInputRef.current) imageZipInputRef.current.value = "";
     }
   }
 
-  async function prepareStorageImages(rows: ImportRow[], supabase: ReturnType<typeof createClient>) {
-    if (!imageZip) return new Map<string, string>();
+  async function prepareStorageImages(
+    rows: ImportRow[],
+    supabase: ReturnType<typeof createClient>
+  ): Promise<{
+    resolved: Map<string, string>;
+    missing: string[];
+    failedUploads: Array<{ filename: string; error: string }>;
+  }> {
+    if (!imageZip) {
+      return { resolved: new Map(), missing: [], failedUploads: [] };
+    }
 
     const needed = new Map<string, string>();
     rows.forEach((row) => {
@@ -242,28 +269,38 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
     });
 
     const resolved = new Map<string, string>();
+    const missing: string[] = [];
+    const failedUploads: Array<{ filename: string; error: string }> = [];
     const entries = Array.from(needed.entries());
-    let failedUploads = 0;
 
-    for (let i = 0; i < entries.length; i += 4) {
-      const batch = entries.slice(i, i + 4);
+    // Upload in small batches so a large import does not hammer Storage or the browser.
+    for (let i = 0; i < entries.length; i += 3) {
+      const batch = entries.slice(i, i + 3);
+
       await Promise.all(
         batch.map(async ([normalizedName, originalName]) => {
           const entry = imageZip.entries.get(normalizedName);
-          if (!entry) return;
+
+          if (!entry) {
+            missing.push(originalName);
+            return;
+          }
 
           try {
             const imageFile = await extractZipImage(imageZip, entry);
             const uploaded = await uploadProductImage(supabase, imageFile);
             resolved.set(normalizedName, uploaded.url);
-          } catch {
-            failedUploads += 1;
+          } catch (error) {
+            failedUploads.push({
+              filename: originalName,
+              error: error instanceof Error ? error.message : String(error),
+            });
           }
         })
       );
     }
 
-    return { resolved, missing: Array.from(needed.keys()).filter((name) => !resolved.has(name)), failedUploads };
+    return { resolved, missing, failedUploads };
   }
 
   async function confirmImport() {
@@ -278,13 +315,18 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
     const supabase = createClient();
 
     try {
-      const storageResult = imageZip
-        ? await prepareStorageImages(validRows, supabase)
-        : new Map<string, string>();
+      const storageResult = await prepareStorageImages(validRows, supabase);
+      const uploadedByName = storageResult.resolved;
+      const storageMissing = storageResult.missing;
+      const uploadFailures = storageResult.failedUploads.length;
 
-      const uploadedByName = storageResult instanceof Map ? storageResult : storageResult.resolved;
-      const storageMissing = storageResult instanceof Map ? [] : storageResult.missing;
-      const uploadFailures = storageResult instanceof Map ? 0 : storageResult.failedUploads;
+      if (storageResult.failedUploads.length > 0) {
+        const firstErrors = storageResult.failedUploads
+          .slice(0, 3)
+          .map((item) => `${item.filename}: ${item.error}`)
+          .join(" | ");
+        setImageZipErrors(firstErrors ? [firstErrors] : []);
+      }
 
       const payloads = validRows.map((row, i) => {
         const normalized = normalizeProductImageFilename(row.image_filename);
@@ -362,6 +404,18 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
       )
     : new Set<string>();
 
+  const zipMatchedForImport = imageZip && importRows
+    ? importRows.filter((row) => {
+        const normalized = normalizeProductImageFilename(row.image_filename);
+        return Boolean(
+          normalized &&
+          !isLegacyProductImagePath(row.image_filename) &&
+          !isAbsoluteImageUrl(row.image_filename) &&
+          imageZip.entries.has(normalized)
+        );
+      }).length
+    : 0;
+
   return (
     <div>
       {importSummary && (
@@ -420,7 +474,22 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
               For new products, choose an optional <strong>images ZIP</strong> below to upload those images directly to
               Supabase Storage. Missing images never stop the import.
             </p>
-            {imageZipMessage && <p className="mt-1 text-emerald-700">{imageZipMessage}</p>}
+            {imageZipMessage && (
+              <p className="mt-1 text-emerald-700">
+                {imageZipMessage}
+                {importRows && imageZip && (
+                  <> Matched to this CSV: <strong>{zipMatchedForImport}</strong> of {importRows.filter((r) => r.image_filename && !isLegacyProductImagePath(r.image_filename) && !isAbsoluteImageUrl(r.image_filename)).length} new-image rows.</>
+                )}
+              </p>
+            )}
+            {imageZipErrors.length > 0 && (
+              <div className="mt-2 rounded-md bg-red-50 p-2 text-red-700">
+                <strong>Image ZIP status:</strong> {imageZipErrors.join(" ")}
+              </div>
+            )}
+            {imageZip && importRows && zipMatchedForImport === 0 && (
+              <p className="mt-2 text-gold-700">No CSV image filenames matched the selected ZIP. Check the CSV <code>Image</code> values against the ZIP filenames.</p>
+            )}
             <p className="mt-1">Slugs are previewed only — the database assigns and guarantees the final unique slug.</p>
           </div>
           <button onClick={confirmImport} disabled={importing || imageZipLoading} className="btn-primary text-sm">
@@ -449,7 +518,7 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
           <button onClick={downloadCsvTemplate} className="btn-outline flex items-center gap-1.5 text-xs"><FileSpreadsheet className="h-3.5 w-3.5" /> Template</button>
           <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileSelect} className="hidden" id="import-file" />
           <label htmlFor="import-file" className="btn-outline flex cursor-pointer items-center gap-1.5 text-xs"><Upload className="h-3.5 w-3.5" /> Import CSV/Excel</label>
-          <input ref={imageZipInputRef} type="file" accept=".zip,application/zip" onChange={handleImageZipSelect} className="hidden" id="import-images-zip" />
+          <input ref={imageZipInputRef} type="file" accept=".zip,application/zip,application/x-zip-compressed" onChange={handleImageZipSelect} className="hidden" id="import-images-zip" />
           <label htmlFor="import-images-zip" className={`btn-outline flex cursor-pointer items-center gap-1.5 text-xs ${imageZipLoading ? "pointer-events-none opacity-60" : ""}`}>
             <Upload className="h-3.5 w-3.5" /> {imageZipLoading ? "Reading Images…" : "Choose Images ZIP"}
           </label>
@@ -458,6 +527,37 @@ export default function ProductsManager({ initialProducts }: { initialProducts: 
           <button onClick={startAdd} className="btn-primary flex items-center gap-1.5 text-xs"><Plus className="h-3.5 w-3.5" /> Add Product</button>
         </div>
       </div>
+
+      {(imageZip || imageZipLoading || imageZipErrors.length > 0) && (
+        <div className="mb-4 rounded-lg border border-emerald-900/10 bg-cream-soft p-3 text-sm dark:border-cream/10 dark:bg-emerald-950/30">
+          <div className="flex items-center justify-between gap-3">
+            <p className="font-medium text-emerald-900 dark:text-cream">Product image ZIP</p>
+            {imageZip && (
+              <button
+                type="button"
+                onClick={() => {
+                  setImageZip(null);
+                  setImageZipMessage("");
+                  setImageZipErrors([]);
+                }}
+                className="text-xs text-ink-soft hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          {imageZipLoading && <p className="mt-1 text-ink-soft">Reading ZIP and indexing image filenames…</p>}
+          {imageZipMessage && <p className="mt-1 text-emerald-700">{imageZipMessage}</p>}
+          {imageZipErrors.length > 0 && <p className="mt-1 text-red-700">{imageZipErrors.join(" ")}</p>}
+          {imageZip && (
+            <div className="mt-2 grid gap-2 text-xs sm:grid-cols-3">
+              <div><strong>{imageZip.entries.size}</strong> images found</div>
+              <div><strong>{Array.from(imageZip.entries.keys()).slice(0, 3).join(", ") || "—"}</strong>{imageZip.entries.size > 3 ? " …" : ""}</div>
+              <div className="text-ink-soft">Ready to match with the CSV Image column</div>
+            </div>
+          )}
+        </div>
+      )}
 
       {selected.size > 0 && (
         <div className="mb-4 flex items-center gap-3 rounded-lg bg-emerald-50 px-4 py-2 text-sm dark:bg-emerald-900">

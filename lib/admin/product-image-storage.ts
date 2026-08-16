@@ -30,18 +30,18 @@ export async function uploadProductImage(
   const { error } = await storage.upload(storagePath, file, {
     contentType: file.type || "application/octet-stream",
     cacheControl: "31536000",
-    upsert: false,
+    upsert: true,
   });
 
   if (error) {
     const message = String(error.message || "");
-    if (!/already exists|duplicate|exists/i.test(message)) {
-      throw new Error(
-        message.includes("Bucket not found") || message.includes("bucket")
-          ? `Supabase Storage bucket "${PRODUCT_IMAGE_BUCKET}" is not available. Create a PUBLIC bucket named "${PRODUCT_IMAGE_BUCKET}" first.`
-          : message
-      );
-    }
+    throw new Error(
+      /bucket/i.test(message)
+        ? `Supabase Storage bucket "${PRODUCT_IMAGE_BUCKET}" is not available. Create the PUBLIC bucket and run the product-image Storage policy SQL.`
+        : /row-level security|not authorized|permission|forbidden/i.test(message)
+          ? `Upload permission was denied by Supabase Storage RLS. Run the PRODUCT_IMAGE_STORAGE_POLICY_FIX.sql migration and make sure your logged-in profile is a staff/owner account.`
+          : message || `Supabase Storage upload failed for ${filename}.`
+    );
   }
 
   const { data } = storage.getPublicUrl(storagePath);

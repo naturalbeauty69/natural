@@ -1,0 +1,26 @@
+PRODUCT IMAGE HYBRID IMPORT FIX v2
+
+1. Replace these files in the existing GitHub project:
+   - components/admin/ProductsManager.tsx
+   - lib/admin/product-image-storage.ts
+
+2. In Supabase SQL Editor, run ONLY:
+   PRODUCT_IMAGE_STORAGE_POLICY_FIX.sql
+
+   Do NOT rerun schema.sql.
+   Do NOT rerun the Academy migration.
+
+3. Keep the existing GitHub-hosted images exactly as they are.
+
+4. Deploy the two changed files to GitHub/Cloudflare.
+
+5. Test:
+   - choose the image ZIP: the admin UI should immediately report how many images were found.
+   - choose the CSV: the review should report how many ZIP filenames match CSV image filenames.
+   - click Import.
+   - Supabase Storage -> products should contain the new image files.
+   - product.image_url should contain the Supabase public URL for new imported images.
+
+6. If an upload fails, the UI will now show the actual Supabase Storage error instead of silently swallowing it.
+
+No existing product rows or old GitHub image URLs are modified by this patch.
