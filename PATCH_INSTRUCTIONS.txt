@@ -1,32 +1,23 @@
-# Hybrid Product Image Storage Patch
+PUBLIC ACADEMY RESOURCES FIX
+===============================
 
-This patch adds a SAFE hybrid image workflow.
+Replace only:
+app/academy/resources/page.tsx
 
-EXISTING PRODUCTS:
-- Existing `/images/products/...` paths are left unchanged.
-- Existing GitHub/Cloudflare product images are not moved or deleted.
+Do NOT replace middleware.ts, Supabase SQL, products files, or other Academy files.
 
-NEW IMPORTS:
-- In Admin > Products, select the CSV/Excel file.
-- Optionally choose an `images.zip`.
-- Bare filenames from the CSV are uploaded directly from the browser to the Supabase `products` Storage bucket.
-- The resulting public Supabase URL is stored in `products.image_url`.
-- If an image is missing or upload fails, the product import continues and the product is stored without a misleading legacy image URL.
-- Absolute URLs and existing `/images/products/...` paths are preserved unchanged.
-- New image uploads happen directly from the browser to Supabase Storage, not through the Cloudflare Worker.
+What this fixes:
+- /academy/resources no longer forces every visitor to log in.
+- Supabase RLS remains responsible for resource-level access.
+- access_level=public rows are visible anonymously.
+- students/approved/staff rows remain restricted by the existing RLS policy.
+- Existing /api/academy/resources/[id] handling remains unchanged.
 
-IMPORTANT:
-1. Run `PRODUCT_IMAGE_STORAGE_MIGRATION.sql` once in the existing Supabase project.
-2. The migration only creates/updates the public `products` Storage bucket and staff upload/update/delete policies. It does NOT modify the `products` table or existing product rows.
-3. Then replace only the listed source files in the existing GitHub project.
-4. Do NOT rerun `schema.sql`.
-5. Do NOT migrate or delete your existing GitHub images.
+After replacing the file:
+1. Commit and push to GitHub.
+2. Let Cloudflare deploy.
+3. Open https://naturalbeauty.com.np/academy/resources in a private/incognito browser window.
+4. Confirm the two public resources appear without login.
+5. Click Open / Download and confirm the file opens.
 
-CSV example:
-Product Name,Category,Price,Image
-New Product,Makeup,2500,new-product.jpg
-
-ZIP:
-new-product.jpg
-
-The file name is matched case-insensitively by base filename.
+No SQL needs to be run for this patch.
