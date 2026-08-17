@@ -1,23 +1,29 @@
-PUBLIC ACADEMY RESOURCES FIX
-===============================
+NATURAL BEAUTY — ACADEMY FILTER + PERFORMANCE PATCH
 
-Replace only:
-app/academy/resources/page.tsx
+Replaces only:
+- app/academy/resources/page.tsx
+- components/academy/AcademyResourceList.tsx
+- components/Header.tsx
+- components/nav/FloatingActions.tsx
+- .gitignore
 
-Do NOT replace middleware.ts, Supabase SQL, products files, or other Academy files.
+Academy:
+- Adds fast client-side search.
+- Adds filters: All, Notice, Syllabus, Files, Images, Links.
+- Adds course filter using the course relation already available through the courses foreign key.
+- Does NOT change existing RLS/access behavior.
 
-What this fixes:
-- /academy/resources no longer forces every visitor to log in.
-- Supabase RLS remains responsible for resource-level access.
-- access_level=public rows are visible anonymously.
-- students/approved/staff rows remain restricted by the existing RLS policy.
-- Existing /api/academy/resources/[id] handling remains unchanged.
+Performance:
+- Header scroll state updates are throttled with requestAnimationFrame and only update React when the state actually changes.
+- Removes expensive backdrop blur from the sticky header.
+- Removes Framer Motion JS from floating action buttons and the continuous WhatsApp ping animation.
+- Adds generated/cache folders to .gitignore.
 
-After replacing the file:
-1. Commit and push to GitHub.
-2. Let Cloudflare deploy.
-3. Open https://naturalbeauty.com.np/academy/resources in a private/incognito browser window.
-4. Confirm the two public resources appear without login.
-5. Click Open / Download and confirm the file opens.
+No SQL is included and no Supabase data is modified by this patch.
 
-No SQL needs to be run for this patch.
+Recommended verification after deployment:
+1. Open /academy/resources.
+2. Test search/type/course filters.
+3. Test public notice/syllabus as visitor.
+4. Test an authenticated/private resource as its authorized user.
+5. Check Cloudflare Worker CPU logs for /academy/resources and normal navigation.

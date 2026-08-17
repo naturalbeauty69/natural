@@ -22,10 +22,30 @@ export default function Header({ contact }: { contact: ContactSettings }) {
   const { totalItems } = useCart();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    onScroll();
+    let frame = 0;
+    let lastScrolled = false;
+
+    const update = () => {
+      frame = 0;
+      const next = window.scrollY > 12;
+      if (next !== lastScrolled) {
+        lastScrolled = next;
+        setScrolled(next);
+      }
+    };
+
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+
+    lastScrolled = window.scrollY > 12;
+    setScrolled(lastScrolled);
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, []);
 
   // Close mobile sidebar / search automatically on route change
@@ -50,10 +70,10 @@ export default function Header({ contact }: { contact: ContactSettings }) {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 border-b transition-all duration-300 ${
+        className={`sticky top-0 z-50 border-b transition-[padding,background-color,box-shadow] duration-200 ${
           scrolled
-            ? "border-emerald-900/8 bg-cream/90 py-2 shadow-soft backdrop-blur-md"
-            : "border-transparent bg-cream/40 py-4 backdrop-blur-sm"
+            ? "border-emerald-900/8 bg-cream/95 py-2 shadow-soft"
+            : "border-transparent bg-cream/90 py-4"
         }`}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6">

@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Next.js / OpenNext / Cloudflare generated output
+.next/
+.open-next/
+.wrangler/
+out/
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Test/coverage/cache
+coverage/
+.cache/
+.tmp/
