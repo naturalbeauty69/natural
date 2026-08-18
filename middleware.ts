@@ -31,14 +31,18 @@ export async function middleware(request: NextRequest) {
   // Logged in — check role to enforce access to the right area.
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, is_active")
+    .select("role, is_active, approval_status")
     .eq("id", user.id)
     .single();
 
   const role = profile?.role ?? "guest";
 
-  if (!profile?.is_active) {
-    return copyCookies(response, NextResponse.redirect(new URL("/login?error=suspended", request.url)));
+  if (!profile?.is_active || profile.approval_status === "suspended") {
+    return copyCookies(response, NextResponse.redirect(new URL("/pending-approval", request.url)));
+  }
+
+  if (profile.approval_status !== "approved") {
+    return copyCookies(response, NextResponse.redirect(new URL("/pending-approval", request.url)));
   }
 
   if (isAdminRoute && !STAFF_ROLES.includes(role)) {

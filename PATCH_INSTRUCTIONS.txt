@@ -1,29 +1,42 @@
-NATURAL BEAUTY — ACADEMY FILTER + PERFORMANCE PATCH
+STUDENT + STAFF SELF-REGISTRATION / APPROVAL PATCH
 
-Replaces only:
-- app/academy/resources/page.tsx
-- components/academy/AcademyResourceList.tsx
-- components/Header.tsx
-- components/nav/FloatingActions.tsx
-- .gitignore
+This patch adds:
+- /register page with Student or Staff account request.
+- email + password registration via Supabase Auth.
+- pending approval state.
+- /pending-approval page.
+- login routing based on approved profile role.
+- owner/director approval queue in Admin > Users.
+- optional course assignment when approving a Student.
+- automatic linking/creation of the students.profile_id record when a Student is approved.
+- approval protection so ordinary users cannot change role/approval/security fields themselves.
+- pending/rejected/suspended accounts cannot enter /admin or /student.
 
-Academy:
-- Adds fast client-side search.
-- Adds filters: All, Notice, Syllabus, Files, Images, Links.
-- Adds course filter using the course relation already available through the courses foreign key.
-- Does NOT change existing RLS/access behavior.
+DEPLOYMENT ORDER
+1. Back up your current working website/GitHub state.
+2. In Supabase SQL Editor, run ONLY:
+   SUPABASE_STUDENT_STAFF_APPROVAL_MIGRATION.sql
+3. Verify the returned approval_status/requested_role counts.
+4. In GitHub, replace ONLY the files in this ZIP using the same relative paths.
+5. Deploy to Cloudflare.
+6. Test with a brand-new TEST email address.
 
-Performance:
-- Header scroll state updates are throttled with requestAnimationFrame and only update React when the state actually changes.
-- Removes expensive backdrop blur from the sticky header.
-- Removes Framer Motion JS from floating action buttons and the continuous WhatsApp ping animation.
-- Adds generated/cache folders to .gitignore.
+TEST FLOW
+A. Open /register?role=student
+B. Register using a test email.
+C. You should see "Approval pending".
+D. Owner/Director opens Admin > Users.
+E. Pending request appears.
+F. Select the course (optional) and click Approve.
+G. Student can now log in and access authorized Academy resources.
+H. Open /register?role=staff and repeat for a staff test account.
+I. Approve as Staff; the account can then enter the Admin area according to its staff role.
+J. Test Reject and Suspend with a test account.
 
-No SQL is included and no Supabase data is modified by this patch.
-
-Recommended verification after deployment:
-1. Open /academy/resources.
-2. Test search/type/course filters.
-3. Test public notice/syllabus as visitor.
-4. Test an authenticated/private resource as its authorized user.
-5. Check Cloudflare Worker CPU logs for /academy/resources and normal navigation.
+IMPORTANT
+- Do not re-run the full schema.sql.
+- Do not delete existing users/profiles.
+- Existing active accounts are backfilled as approved so the current site keeps working.
+- Only owner/director can approve/reject/change role.
+- A Student approval may optionally create/link their row in public.students and assign course_id.
+- This patch does not change product data or Academy resource files.

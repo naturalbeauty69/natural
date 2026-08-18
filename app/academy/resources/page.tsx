@@ -10,25 +10,19 @@ export const metadata: Metadata = {
 
 export default async function AcademyResourcesPage() {
   const supabase = await createClient();
-
-  // One focused query: fetch only fields needed for the resource list/filter UI.
-  // RLS still decides which resources this visitor/account is allowed to see.
+  // No page-wide login redirect. RLS decides which resources this visitor may see.
   const { data: resources } = await supabase
     .from("academy_resources")
-    .select(
-      "id,title,description,resource_type,file_name,download_enabled,access_level,course_id,display_order,courses(name)"
-    )
+    .select("id, title, description, resource_type, file_name, storage_path, storage_url, google_drive_url, download_enabled, course_id")
     .eq("is_active", true)
-    .order("display_order", { ascending: true })
-    .limit(500);
+    .order("display_order", { ascending: true });
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-16">
+    <div className="mx-auto max-w-4xl px-6 py-16">
       <p className="eyebrow text-gold-600">Academy resource library</p>
       <h1 className="mt-2 text-4xl text-emerald-900">Notices, syllabi & learning resources</h1>
       <p className="mt-3 text-sm text-ink-soft">
-        Public Academy resources are available without signing in. Private course
-        resources are shown only when your account has permission to access them.
+        Public resources are available without signing in. Private resources appear only when your account has permission.
       </p>
       <AcademyResourceList resources={(resources ?? []) as any} />
     </div>

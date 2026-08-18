@@ -10,8 +10,10 @@ import { trackAdminLogin } from "@/lib/analytics";
 
 function LoginForm() {
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/admin/dashboard";
+  const redirectTo = searchParams.get("redirect");
+  const loginRole = searchParams.get("role") === "student" ? "student" : searchParams.get("role") === "staff" ? "staff" : "auto";
   const suspended = searchParams.get("error") === "suspended";
+  const callbackError = searchParams.get("error") === "auth_callback_failed" || searchParams.get("error") === "missing_code";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,6 +37,58 @@ function LoginForm() {
         return;
       }
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setStatus("error");
+        setErrorMessage("Login succeeded but the session could not be loaded. Please try again.");
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role, is_active, approval_status")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError || !profile) {
+        setStatus("error");
+        setErrorMessage("Your account profile could not be loaded. Please contact the administrator.");
+        return;
+      }
+
+      if (!profile.is_active || ["suspended", "rejected"].includes(profile.approval_status)) {
+        await supabase.auth.signOut();
+        setStatus("error");
+        setErrorMessage(profile.approval_status === "rejected" ? "Your account has not been approved." : "Your account is suspended.");
+        return;
+      }
+
+      if (profile.approval_status !== "approved") {
+        trackAdminLogin();
+        window.location.href = "/pending-approval";
+        return;
+      }
+
+      const destination =
+        redirectTo ||
+        (profile.role === "student"
+          ? "/student/dashboard"
+          : ["owner", "director", "manager", "receptionist", "trainer", "staff"].includes(profile.role)
+            ? "/admin/dashboard"
+            : "/");
+
+      if (loginRole === "student" && profile.role !== "student" && !["owner","director","manager","receptionist","trainer","staff"].includes(profile.role)) {
+        setStatus("error");
+        setErrorMessage("This account is not approved as a student account.");
+        return;
+      }
+
+      if (loginRole === "staff" && !["owner","director","manager","receptionist","trainer","staff"].includes(profile.role)) {
+        setStatus("error");
+        setErrorMessage("This account is not approved as a staff/admin account.");
+        return;
+      }
+
       trackAdminLogin();
       // Hard navigation (not router.push/router.refresh): the session
       // cookie was just written by the browser client's cookie adapter,
@@ -43,7 +97,7 @@ function LoginForm() {
       // cookie was set, causing a redirect loop or stuck loading state
       // — this is a well-known gotcha with Supabase SSR + Next.js App
       // Router, especially behind an edge cache like Cloudflare.
-      window.location.href = redirectTo;
+      window.location.href = redirectTo || destination;
     } catch (err) {
       // Catches a misconfigured Supabase client or any unexpected
       // failure — without this, the UI would otherwise be stuck on
@@ -67,6 +121,12 @@ function LoginForm() {
         {suspended && (
           <p className="mt-6 rounded-lg bg-red-100 p-3 text-center text-xs text-red-700">
             Your account has been suspended. Contact the administrator.
+          </p>
+        )}
+
+        {callbackError && (
+          <p className="mt-6 rounded-lg bg-red-100 p-3 text-center text-xs text-red-700">
+            The authentication link could not be completed. Please sign in again.
           </p>
         )}
 
@@ -136,9 +196,11 @@ function LoginForm() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-ink-soft">
-          <Link href="/" className="hover:text-emerald-700">← Back to website</Link>
-        </p>
+        <div className="mt-6 flex flex-col gap-2 text-center text-xs text-ink-soft">
+          <Link href="/register?role=student" className="hover:text-emerald-700">Create a student account</Link>
+          <Link href="/register?role=staff" className="hover:text-emerald-700">Create a staff account</Link>
+          <Link href="/" className="mt-2 hover:text-emerald-700">← Back to website</Link>
+        </div>
       </div>
     </div>
   );

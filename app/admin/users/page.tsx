@@ -9,8 +9,14 @@ export default async function AdminUsersPage() {
 
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, full_name, email, role, is_active, created_at")
+    .select("id, full_name, email, phone, role, requested_role, approval_status, is_active, created_at")
     .order("created_at", { ascending: false });
+
+  const { data: courses } = await supabase
+    .from("courses")
+    .select("id, name")
+    .eq("is_active", true)
+    .order("display_order");
 
   return (
     <div>
@@ -20,7 +26,7 @@ export default async function AdminUsersPage() {
         {!canManage && " (View only — Owner/Director role required to make changes.)"}
       </p>
       <div className="mt-6">
-        <UsersManager initialProfiles={profiles ?? []} canManage={canManage} />
+        <UsersManager initialProfiles={profiles ?? []} courses={courses ?? []} canManage={canManage} />
       </div>
     </div>
   );

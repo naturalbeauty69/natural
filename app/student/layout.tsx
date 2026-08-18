@@ -8,8 +8,9 @@ export default async function StudentLayout({ children }: { children: React.Reac
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?redirect=/student/dashboard");
 
-  const { data: profile } = await supabase.from("profiles").select("role, is_active, full_name").eq("id", user.id).single();
-  if (!profile?.is_active) redirect("/login?error=suspended");
+  const { data: profile } = await supabase.from("profiles").select("role, is_active, approval_status, full_name").eq("id", user.id).single();
+  if (!profile?.is_active || profile.approval_status === "suspended") redirect("/pending-approval");
+  if (profile.approval_status !== "approved") redirect("/pending-approval");
   if (profile.role !== "student" && !["owner", "director", "manager", "receptionist", "trainer", "staff"].includes(profile.role)) {
     redirect("/");
   }
