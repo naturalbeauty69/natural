@@ -1,42 +1,53 @@
-STUDENT + STAFF SELF-REGISTRATION / APPROVAL PATCH
+Natural Beauty Academy — Account, Mobile, Blog Cover & Notification Patch
+=========================================================================
 
-This patch adds:
-- /register page with Student or Staff account request.
-- email + password registration via Supabase Auth.
-- pending approval state.
-- /pending-approval page.
-- login routing based on approved profile role.
-- owner/director approval queue in Admin > Users.
-- optional course assignment when approving a Student.
-- automatic linking/creation of the students.profile_id record when a Student is approved.
-- approval protection so ordinary users cannot change role/approval/security fields themselves.
-- pending/rejected/suspended accounts cannot enter /admin or /student.
+Replace ONLY these website files:
+  app/academy/resources/page.tsx
+  components/academy/AcademyResourceList.tsx
+  components/BlogCard.tsx
 
-DEPLOYMENT ORDER
-1. Back up your current working website/GitHub state.
-2. In Supabase SQL Editor, run ONLY:
-   SUPABASE_STUDENT_STAFF_APPROVAL_MIGRATION.sql
-3. Verify the returned approval_status/requested_role counts.
-4. In GitHub, replace ONLY the files in this ZIP using the same relative paths.
-5. Deploy to Cloudflare.
-6. Test with a brand-new TEST email address.
+What changed
+------------
+1. Academy page now has visible Login and Create account buttons.
+2. Academy filters are desktop-friendly but no longer sticky/large on mobile.
+   Mobile uses a compact expandable Filter control.
+3. Academy query now includes access_level and the course name relation so the
+   filters and access badges have the data they need.
+4. Blog cards now use an existing local library image as a category-based fallback
+   when a blog cover_image_url is empty. No external stock-image dependency was added.
+5. The public/ private Supabase access model is not changed.
 
-TEST FLOW
-A. Open /register?role=student
-B. Register using a test email.
-C. You should see "Approval pending".
-D. Owner/Director opens Admin > Users.
-E. Pending request appears.
-F. Select the course (optional) and click Approve.
-G. Student can now log in and access authorized Academy resources.
-H. Open /register?role=staff and repeat for a staff test account.
-I. Approve as Staff; the account can then enter the Admin area according to its staff role.
-J. Test Reject and Suspend with a test account.
+Authentication
+--------------
+The current project already contains /login, /register and /pending-approval pages.
+This patch surfaces those links from the public Academy page; it does not change
+Supabase Auth or user roles.
 
-IMPORTANT
-- Do not re-run the full schema.sql.
-- Do not delete existing users/profiles.
-- Existing active accounts are backfilled as approved so the current site keeps working.
-- Only owner/director can approve/reject/change role.
-- A Student approval may optionally create/link their row in public.students and assign course_id.
-- This patch does not change product data or Academy resource files.
+Notifications
+-------------
+The main schema already creates in-app notifications for appointments, messages,
+and reviews. The optional SQL file in this patch adds an in-app notification for
+new course applications.
+
+Run the optional SQL ONCE only after confirming that public.notifications and
+public.course_applications exist.
+
+Important
+---------
+This SQL sends an in-app notification to the existing admin Notification Center.
+It does not send external email because no email provider configuration is present
+in the source reviewed for this patch.
+
+Deployment
+----------
+1. Replace the three website files above in GitHub.
+2. Commit and push.
+3. Wait for Cloudflare to deploy.
+4. Open /academy/resources in desktop and mobile.
+5. Test Login and Create account buttons.
+6. Test Academy filters and confirm the filter panel no longer covers the list on mobile.
+7. Test a blog with no cover_image_url to confirm a fallback image appears.
+8. Optionally run the SQL file once and submit a test course application to confirm
+   an admin in-app notification appears.
+
+Do not rerun the existing full Academy migration just for this patch.

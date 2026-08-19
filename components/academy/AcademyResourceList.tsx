@@ -70,62 +70,108 @@ export default function AcademyResourceList({ resources }: { resources: Resource
 
   return (
     <section className="mt-6" aria-label="Academy resources">
-      <div className="card sticky top-[76px] z-20 border border-emerald-900/10 bg-cream/95 p-4 shadow-soft">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <label className="relative min-w-0 flex-1">
+      <div className="card border border-emerald-900/10 bg-cream/95 p-3 shadow-soft md:sticky md:top-[76px] md:z-20 md:p-4">
+        <div className="flex flex-col gap-3">
+          <label className="relative min-w-0">
             <span className="sr-only">Search Academy resources</span>
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-900/50" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search notices, syllabi, files..."
-              className="w-full rounded-lg border border-emerald-900/10 bg-white/60 py-2.5 pl-9 pr-3 text-sm outline-none transition-colors focus:border-emerald-700/30"
+              className="w-full rounded-lg border border-emerald-900/10 bg-white/60 py-3 pl-9 pr-3 text-sm outline-none transition-colors focus:border-emerald-700/30"
             />
           </label>
 
-          <div className="flex items-center gap-2 text-xs text-ink-soft">
-            <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-            <span className="hidden sm:inline">Filter</span>
+          <div className="md:hidden">
+            <details>
+              <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg border border-emerald-900/10 bg-white/60 px-3 py-2.5 text-sm font-medium text-emerald-900">
+                <span className="inline-flex items-center gap-2">
+                  <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+                  Filters
+                </span>
+                <span className="text-xs font-normal text-ink-soft">
+                  {filtered.length} result{filtered.length === 1 ? "" : "s"}
+                </span>
+              </summary>
+              <div className="mt-3 grid gap-2">
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  aria-label="Filter by resource type"
+                  className="w-full rounded-lg border border-emerald-900/10 bg-white/60 px-3 py-2.5 text-sm text-ink-soft outline-none"
+                >
+                  <option value="all">All types</option>
+                  {Object.entries(TYPE_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+                <select
+                  value={course}
+                  onChange={(e) => setCourse(e.target.value)}
+                  aria-label="Filter by course"
+                  className="w-full rounded-lg border border-emerald-900/10 bg-white/60 px-3 py-2.5 text-sm text-ink-soft outline-none"
+                >
+                  <option value="all">All courses</option>
+                  {courses.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                </select>
+                <select
+                  value={access}
+                  onChange={(e) => setAccess(e.target.value)}
+                  aria-label="Filter by access level"
+                  className="w-full rounded-lg border border-emerald-900/10 bg-white/60 px-3 py-2.5 text-sm text-ink-soft outline-none"
+                >
+                  <option value="all">All access</option>
+                  <option value="public">Public</option>
+                  <option value="students">Students</option>
+                  <option value="approved">Approved</option>
+                  <option value="staff">Staff</option>
+                </select>
+              </div>
+            </details>
           </div>
 
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            aria-label="Filter by resource type"
-            className="rounded-lg border border-emerald-900/10 bg-white/60 px-3 py-2.5 text-sm text-ink-soft outline-none"
-          >
-            <option value="all">All types</option>
-            {Object.entries(TYPE_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-
-          <select
-            value={course}
-            onChange={(e) => setCourse(e.target.value)}
-            aria-label="Filter by course"
-            className="rounded-lg border border-emerald-900/10 bg-white/60 px-3 py-2.5 text-sm text-ink-soft outline-none"
-          >
-            <option value="all">All courses</option>
-            {courses.map(([id, name]) => (
-              <option key={id} value={id}>{name}</option>
-            ))}
-          </select>
-          <select
-            value={access}
-            onChange={(e) => setAccess(e.target.value)}
-            aria-label="Filter by access level"
-            className="rounded-lg border border-emerald-900/10 bg-white/60 px-3 py-2.5 text-sm text-ink-soft outline-none"
-          >
-            <option value="all">All access</option>
-            <option value="public">Public</option>
-            <option value="students">Students</option>
-            <option value="approved">Approved</option>
-            <option value="staff">Staff</option>
-          </select>
+          <div className="hidden gap-2 md:flex md:items-center">
+            <div className="mr-1 inline-flex items-center gap-2 text-xs text-ink-soft">
+              <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+              Filter
+            </div>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              aria-label="Filter by resource type"
+              className="min-w-0 flex-1 rounded-lg border border-emerald-900/10 bg-white/60 px-3 py-2.5 text-sm text-ink-soft outline-none"
+            >
+              <option value="all">All types</option>
+              {Object.entries(TYPE_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+            <select
+              value={course}
+              onChange={(e) => setCourse(e.target.value)}
+              aria-label="Filter by course"
+              className="min-w-0 flex-1 rounded-lg border border-emerald-900/10 bg-white/60 px-3 py-2.5 text-sm text-ink-soft outline-none"
+            >
+              <option value="all">All courses</option>
+              {courses.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+            </select>
+            <select
+              value={access}
+              onChange={(e) => setAccess(e.target.value)}
+              aria-label="Filter by access level"
+              className="min-w-0 flex-1 rounded-lg border border-emerald-900/10 bg-white/60 px-3 py-2.5 text-sm text-ink-soft outline-none"
+            >
+              <option value="all">All access</option>
+              <option value="public">Public</option>
+              <option value="students">Students</option>
+              <option value="approved">Approved</option>
+              <option value="staff">Staff</option>
+            </select>
+          </div>
         </div>
 
-        <div className="mt-3 flex items-center justify-between text-xs text-ink-soft">
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-emerald-900/5 pt-3 text-xs text-ink-soft">
           <span>{filtered.length} resource{filtered.length === 1 ? "" : "s"}</span>
           {hasFilters ? (
             <button

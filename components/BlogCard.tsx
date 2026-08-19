@@ -2,13 +2,23 @@ import Link from "next/link";
 import Image from "next/image";
 import { BlogPost } from "@/data/blog";
 
+function fallbackCover(category?: string | null) {
+  const value = (category ?? "").toLowerCase();
+  if (value.includes("hair")) return "/images/library/hair-smoothening-rebonding.webp";
+  if (value.includes("makeup") || value.includes("bridal")) return "/images/library/nepali-bridal-makeup.webp";
+  if (value.includes("skin") || value.includes("facial")) return "/images/library/Skin-and-facial-treatment.webp";
+  if (value.includes("academy") || value.includes("career") || value.includes("training")) return "/images/library/professional-makeup-course.webp";
+  return "/images/library/ai-skin-analysis.webp";
+}
+
 export default function BlogCard({ post }: { post: BlogPost }) {
+  const cover = post.coverImageUrl || fallbackCover(post.category);
   return (
     <Link href={`/blog/${post.slug}`} className="card block overflow-hidden transition-shadow hover:shadow-gold">
       <div className="relative aspect-[16/10] bg-emerald-50">
-        {post.coverImageUrl ? (
+        {cover ? (
           <Image
-            src={post.coverImageUrl}
+            src={cover}
             alt={post.title}
             fill
             className="object-cover"
@@ -16,7 +26,7 @@ export default function BlogCard({ post }: { post: BlogPost }) {
           />
         ) : (
           <div className="flex h-full items-center justify-center px-6 text-center">
-            <p className="text-xs italic text-emerald-700/70">{post.coverImageCaption}</p>
+            <p className="text-xs italic text-emerald-700/70">{post.coverImageCaption || "Natural Beauty Clinic & Academy"}</p>
           </div>
         )}
       </div>
