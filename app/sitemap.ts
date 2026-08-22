@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 import { blogPosts } from "@/data/blog";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://naturalbeautyclinic.com.np";
+  const base = "https://naturalbeauty.com.np";
   const routes = [
     "", "/about", "/services", "/academy", "/gallery", "/team", "/contact",
     "/appointment", "/blog", "/testimonials", "/faq",
